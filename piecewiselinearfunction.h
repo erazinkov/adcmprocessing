@@ -19,8 +19,10 @@ public:
                return val;
            }
        }
+       val = par_.back().intercept + arg * par_.back().slope;
+
        return val;
-   }
+    }
     auto parNumber() const {
         return par_.size();
     }

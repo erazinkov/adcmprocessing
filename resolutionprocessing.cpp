@@ -23,6 +23,7 @@ void ResolutionProcessing::processingEnergy(const std::string &filePath, const s
     const std::string psName{filePath + "_energy_res.ps"};
     TCanvas *c = new TCanvas("c", "c", 1024, 960);
     c->Print((psName + '[').c_str());
+    gPad->SetGrid(1, 1);
     for (size_t i{0}; i < std::min(hists.size(), gammaNumber); ++i) {
         if (i == 0) {
             hS = static_cast<TH1D *>(hists.at(i)->Clone("hS"));
@@ -63,6 +64,7 @@ void ResolutionProcessing::processingTime(const std::string &filePath, const std
     const std::string psName{filePath + "_time_res.ps"};
     TCanvas *c = new TCanvas("c", "c", 1024, 960);
     c->Print((psName + '[').c_str());
+    gPad->SetGrid(1, 1);
     for (size_t i{0}; i < std::min(hists.size(), gammaNumber); ++i) {
         if (i == 0) {
             hS = static_cast<TH1D *>(hists.at(i)->Clone("hS"));

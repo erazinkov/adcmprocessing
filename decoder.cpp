@@ -5,7 +5,6 @@
 
 #include "progressbar.h"
 #include "decoder.h"
-#include "constants.h"
 
 #include <iostream>
 #include <bits/stdc++.h>
@@ -51,7 +50,7 @@ void Decoder::process(const std::string &filePath)
         {
             currentPosition = static_cast<u_int64_t>(ifs_.tellg());
             ifs_ >> cmap;
-            currentPosition -= sizeof(stor_packet_hdr_t);
+            // currentPosition -= sizeof(stor_packet_hdr_t);
             ProgressBar<u_int64_t>::show(currentPosition, size);
             continue;
         }
@@ -115,6 +114,23 @@ void Decoder::process(const std::string &filePath)
     delete a;
     a = nullptr;
     ifs_.close();
+    std::cout << std::endl;
+    std::set<uint8_t> first_set, second_set;
+
+    for (const auto& [key, value] : events_) {
+        first_set.insert(key.first);
+        second_set.insert(key.second);
+    }
+
+    channels_.g.assign(first_set.begin(), first_set.end());
+    channels_.a.assign(second_set.begin(), second_set.end());
+
+    for (const auto &ch : channels_.g) {
+        std::cout << +ch << std::endl;
+    }
+    for (const auto &ch : channels_.a) {
+        std::cout << +ch << std::endl;
+    }
 }
 
 const dec_ch_t &Decoder::channels() const
