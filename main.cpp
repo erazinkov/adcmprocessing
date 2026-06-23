@@ -26,19 +26,21 @@ int main(int argc, char *argv[])
         Decoder decoder;
         std::cout << "Processing file: " << filePath << std::endl;
         decoder.process(filePath);
+        std::cout << decoder.events().size() << std::endl;
+//        std::cout << decoder.convert_file_mmap(filePath).size() << std::endl;
         std::cout << filePath << " " << "Time:" << " " << decoder.time();
         auto stop = std::chrono::steady_clock::now();
         std::cout << " " << "Decoding:" << " " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
-        if (decoder.events().empty() || qFuzzyCompare(decoder.time(), 0.0) || decoder.counters().empty()) {
-            return 0;
-        }
-        HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
-        Calibration calibration(filePath.filename().string(), &histogramManager);
-        start = std::chrono::steady_clock::now();
-        calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
-        calibration.process();
-        stop = std::chrono::steady_clock::now();
-        std::cout << "Processing: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
+//        if (decoder.events().empty() || qFuzzyCompare(decoder.time(), 0.0) || decoder.counters().empty()) {
+//            return 0;
+//        }
+//        HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
+//        Calibration calibration(filePath.filename().string(), &histogramManager);
+//        start = std::chrono::steady_clock::now();
+//        calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
+//        calibration.process();
+//        stop = std::chrono::steady_clock::now();
+//        std::cout << "Processing: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
 
     return 0;
 //    return a.exec();
