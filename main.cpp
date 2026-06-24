@@ -8,40 +8,54 @@
 #include "calibration.h"
 
 #include "constants.h"
+#include "consoletable.h"
 
 bool createOutputDirectory(const std::string& path);
 
 int main(int argc, char *argv[])
 {
 //    QCoreApplication a(argc, argv);
-        if (argc != 2) {
-            std::cerr << "Usage: " << argv[0] << " <filepath>" << std::endl;
-            return 1;
-        }
-        std::filesystem::path filePath = argv[1];
-        if (!createOutputDirectory(AppConstants::OUTPUT_PATH)) {
-            return 1;
-        }
-        auto start = std::chrono::steady_clock::now();
-        Decoder decoder;
-        std::cout << "Processing file: " << filePath << std::endl;
-        decoder.process(filePath);
-        std::cout << decoder.events().size() << std::endl;
-//        std::cout << decoder.convert_file_mmap(filePath).size() << std::endl;
-        std::cout << filePath << " " << "Time:" << " " << decoder.time();
-        auto stop = std::chrono::steady_clock::now();
-        std::cout << " " << "Decoding:" << " " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
-       if (decoder.events().empty() || qFuzzyCompare(decoder.time(), 0.0) || decoder.counters().empty()) {
-           return 0;
-       }
-       HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
-       Calibration calibration(filePath.filename().string(), &histogramManager);
-       start = std::chrono::steady_clock::now();
-       calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
-       calibration.process();
-       stop = std::chrono::steady_clock::now();
-       std::cout << "Processing: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <filepath>" << std::endl;
+        return 1;
+    }
+    std::filesystem::path filePath = argv[1];
+    if (!createOutputDirectory(AppConstants::OUTPUT_PATH)) {
+        return 1;
+    }
+    auto start = std::chrono::steady_clock::now();
+    Decoder decoder;
+    std::cout << "Processing file: " << filePath << std::endl;
+    decoder.process(filePath);
+    auto stop = std::chrono::steady_clock::now();
+    auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
+    if (decoder.events().empty() || qFuzzyCompare(decoder.time(), 0.0) || decoder.counters().empty()) {
+        return 0;
+    }
+    HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
+    Calibration calibration(filePath.filename().string(), &histogramManager);
+    start = std::chrono::steady_clock::now();
+    calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
+    calibration.process();
+    stop = std::chrono::steady_clock::now();
+    auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
+    auto eventsNumber{0};
+    for (const auto& pair : decoder.events()) {
+        eventsNumber += pair.second.size();
+    }
+
+    std::vector<std::vector<std::string>> pData = {
+            {std::string(BOLD) + "parameter" + RESET, std::string(BOLD) + "value" + RESET, std::string(BOLD) + "dimension" + RESET},
+            {"decodeTime", std::to_string(dT), std::string(YELLOW) + "ms" + RESET},
+            {"processTime", std::to_string(dP), std::string(YELLOW) + "ms" + RESET},
+            {"eventsNumber", std::to_string(eventsNumber), std::string(YELLOW) + "" + RESET},
+            {"measTime", std::to_string(decoder.time()), std::string(YELLOW) + "s" + RESET},
+            {"gammaNumber", std::to_string(decoder.channels().g.size()), std::string(YELLOW) + "" + RESET},
+            {"alphaNumber", std::to_string(decoder.channels().a.size()), std::string(YELLOW) + "" + RESET},
+        };
+    ConsoleTable pTable(pData);
+    pTable.show();
     return 0;
 //    return a.exec();
 }

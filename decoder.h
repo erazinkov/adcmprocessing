@@ -11,8 +11,6 @@ public:
 
     void process(const std::string &filePath);
 
-    std::vector<dec_ev_t> convert_file_mmap(const std::string& filename);
-
     const dec_ch_t &channels() const;
 
     const std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>> &events() const;

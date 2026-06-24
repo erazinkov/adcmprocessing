@@ -10,6 +10,7 @@ CONFIG -= app_bundle
 SOURCES += \
         calibration.cpp \
 #        channelmap.cpp \
+    consoletable.cpp \
         decoder.cpp \
         energypeak.cpp \
     energypeakfinder.cpp \
@@ -28,6 +29,7 @@ HEADERS += \
         adcm_df.h \
         calibration.h \
 #        channelmap.h \
+    consoletable.h \
         constants.h \
         decoder.h \
         energypeak.h \
