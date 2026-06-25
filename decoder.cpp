@@ -8,12 +8,11 @@
 
 #include <iostream>
 #include <bits/stdc++.h>
-
+#include <algorithm>
 
 Decoder::Decoder()
 {
 }
-
 
 void Decoder::process(const std::string &filePath)
 {
@@ -66,7 +65,8 @@ void Decoder::process(const std::string &filePath)
 //                        channels_.g.insert(g->ch);
 //                        channels_.a.insert(a->ch);
 //                    }
-                    events_[{g->ch, a->ch}].emplace_back(dec_ev_m_t{g->t - a->t, g->a});
+//                    events_[{g->ch, a->ch}].emplace_back(dec_ev_m_t{g->t - a->t, g->a});
+                    events_o_[{g->ch, a->ch}].emplace_back(dec_ev_m_t{g->t - a->t, g->a});
 //                    g = nullptr;
 //                    a = nullptr;
 
@@ -117,7 +117,7 @@ void Decoder::process(const std::string &filePath)
     std::cout << std::endl;
     std::set<uint8_t> first_set, second_set;
 
-    for (const auto& [key, value] : events_) {
+    for (const auto& [key, value] : events_o_) {
         first_set.insert(key.first);
         second_set.insert(key.second);
     }
@@ -144,5 +144,10 @@ double Decoder::time() const
 const std::map<uint8_t, uint32_t> &Decoder::counters() const
 {
     return counters_;
+}
+
+const std::unordered_map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>, PairHash> &Decoder::events_o() const
+{
+    return events_o_;
 }
 

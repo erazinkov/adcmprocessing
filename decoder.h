@@ -3,6 +3,13 @@
 
 #include "adcm_df.h"
 #include <map>
+#include <unordered_map>
+
+struct PairHash {
+    size_t operator()(const std::pair<uint8_t, uint8_t>& p) const {
+        return (static_cast<size_t>(p.first) << 8) | p.second;
+    }
+};
 
 class Decoder
 {
@@ -19,9 +26,13 @@ public:
 
     const std::map<uint8_t, uint32_t> &counters() const;
 
+    const std::unordered_map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>, PairHash> &events_o() const;
+
 private:
     std::ifstream ifs_;
     std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>> events_;
+    std::unordered_map<std::pair<uint8_t, uint8_t>,
+                           std::vector<dec_ev_m_t>, PairHash> events_o_;
     std::map<uint8_t, uint32_t> counters_;
     double time_;
 

@@ -29,19 +29,23 @@ int main(int argc, char *argv[])
     decoder.process(filePath);
     auto stop = std::chrono::steady_clock::now();
     auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
-    if (decoder.events().empty() || qFuzzyCompare(decoder.time(), 0.0) || decoder.counters().empty()) {
-        return 0;
+
+    if (decoder.events_o().empty() || qFuzzyCompare(decoder.time(), 0.0) || decoder.counters().empty()) {
+        return 1;
     }
+
+
     HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
     Calibration calibration(filePath.filename().string(), &histogramManager);
     start = std::chrono::steady_clock::now();
-    calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
+//    calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
+    calibration.setNewData_o(decoder.events_o(), decoder.channels(), decoder.time(), decoder.counters());
     calibration.process();
     stop = std::chrono::steady_clock::now();
     auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
     auto eventsNumber{0};
-    for (const auto& pair : decoder.events()) {
+    for (const auto& pair : decoder.events_o()) {
         eventsNumber += pair.second.size();
     }
 

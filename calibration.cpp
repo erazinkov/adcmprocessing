@@ -435,6 +435,48 @@ void Calibration::setNewData(const std::map<std::pair<uint8_t, uint8_t>, std::ve
     }
 }
 
+void Calibration::setNewData_o(const std::unordered_map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>, PairHash> &events_o, const dec_ch_t &channels, double time, const std::map<uint8_t, uint32_t> &counters)
+{
+    time_ += time;
+    for (const auto& [key, vec] : events_o) {
+        auto [it, inserted] = events_m_.try_emplace(key, vec);
+        if (!inserted) {
+            it->second.insert(it->second.end(), vec.begin(), vec.end());
+        }
+    }
+    for (const auto& [key, value] : counters) {
+        auto [it, inserted] = counters_.try_emplace(key, value);
+        if (!inserted) {
+            it->second = value;
+        }
+    }
+    countersG_.clear();
+    countersA_.clear();
+    channels_ = channels;
+    for (size_t i{0}; i < channels_.g.size(); ++i) {
+        uint8_t key{*std::next(channels_.g.begin(), i)};
+        auto it = counters_.find(key);
+        if (it != counters_.end()) {
+            auto value{it->second};
+            auto [itt, inserted] = countersG_.try_emplace(i, value);
+            if (!inserted) {
+                itt->second = value;
+            }
+        }
+    }
+    for (size_t i{0}; i < channels_.a.size(); ++i) {
+        uint8_t key{*std::next(channels_.a.begin(), i)};
+        auto it = counters_.find(key);
+        if (it != counters_.end()) {
+            auto value{it->second};
+            auto [itt, inserted] = countersA_.try_emplace(i, value);
+            if (!inserted) {
+                itt->second = value;
+            }
+        }
+    }
+}
+
 void Calibration::resetData()
 {
     std::cout << "Reset events - ";
