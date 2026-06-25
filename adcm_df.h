@@ -113,9 +113,6 @@ struct dec_ch_t
     std::vector<u_int8_t> g;
     std::vector<u_int8_t> a;
     std::vector<u_int8_t> d;
-    // std::set<u_int8_t> g;
-    // std::set<u_int8_t> a;
-    // std::set<u_int8_t> d;
 };
 
 #endif /* ADCM_DF_H */
