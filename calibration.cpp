@@ -143,8 +143,10 @@ void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::
                     fillHistTimeWithEnergyCut(events_m_.at(p),
                                               hists.at(i).at(j),
                                               timeCorrections_.at({i, j}),
-                                              4438.0 - 250.0,
-                                              4438.0 + 250.0,
+//                                              4438.0 - 250.0,
+//                                              4438.0 + 250.0,
+                                              0.0,
+                                              8'000.0,
                                               fs.at(i));
                 }
             });

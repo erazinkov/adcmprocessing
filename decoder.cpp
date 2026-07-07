@@ -24,7 +24,7 @@ void Decoder::process(const std::string &filePath)
     }
 
     ifs_.seekg(0, std::ios::end);
-    u_int64_t size{static_cast<u_int32_t>(ifs_.tellg())};
+    u_int64_t size{static_cast<u_int64_t>(ifs_.tellg())};
     ifs_.seekg(0);
 
     events_.clear();

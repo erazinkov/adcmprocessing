@@ -21,7 +21,7 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
 
     auto ff = [] (double *x, double *par) {
        double arg_1{0.0}, arg_2{0.0}, arg_3{0.0};
-       if (par[2] != 0.0 && par[5] != 0.0 && par[8] != 0.0)
+       if (par[2] != 0.0 && par[5] != 0.0)
        {
            arg_1 = ( x[0] - par[1] ) / par[2];
            arg_2 = ( x[0] - ( par[1] + par[4] ) ) / par[5];
@@ -37,7 +37,7 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
        return fitval;
    };
 
-    TF1 *f{new TF1("f", ff, xMax - 15.0, xMax + 25.0, 11)};
+    std::unique_ptr<TF1> f = std::make_unique<TF1>("f", ff, xMax - 15.0, xMax + 25.0, 8);
 
     f->SetParameter(0, obPeakAmp);
     f->SetParameter(1, xMax);
@@ -56,7 +56,7 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
 
     // hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 40.0, f->GetParameter(1) + 25.0);
 
-    hist->Fit(f, "RQ0N");
+    hist->Fit(f.get(), "RQ0N");
 
     auto fff = [](double *x, double *par){
         double arg{0};
@@ -89,8 +89,8 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
     timePeakPos = f->GetParameter(1);
 //    timePeakPos = xMax;
 
-    delete f;
-    f = nullptr;
+//    delete f;
+//    f = nullptr;
 
     gErrorIgnoreLevel = 0;
 
