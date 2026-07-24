@@ -1,6 +1,7 @@
 #include "calibration.h"
 
 #include <TCanvas.h>
+#include <TFile.h>
 
 #include "utils.h"
 #include "constants.h"
@@ -92,6 +93,14 @@ void Calibration::process()
 
     fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
+
+    const auto rFname{AppConstants::OUTPUT_PATH + fileName_};
+    TFile *rootFile = new TFile((rFname + ".root").c_str(), "RECREATE");
+    histogramManager_->histEnergyTotal()->Write();
+    rootFile->Close();
+
+
+    return;
 
     ResolutionProcessing rP;
     rP.processingEnergy(AppConstants::OUTPUT_PATH + fileName_, histogramManager_->histsEnergyByGamma(), channels_.g.size());

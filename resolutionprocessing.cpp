@@ -59,12 +59,13 @@ void ResolutionProcessing::processingEnergy(const std::string &filePath, const s
 
 void ResolutionProcessing::processingTime(const std::string &filePath, const std::vector<TH1D *> &hists, const size_t &gammaNumber)
 {
+
     timeResolutionsByGamma_.clear();
     TH1D *hS{nullptr};
     const std::string psName{filePath + "_time_res.ps"};
     TCanvas *c = new TCanvas("c", "c", 1024, 960);
     c->Print((psName + '[').c_str());
-    gPad->SetGrid(1, 1);
+    gPad->SetGrid();
     for (size_t i{0}; i < std::min(hists.size(), gammaNumber); ++i) {
         if (i == 0) {
             hS = static_cast<TH1D *>(hists.at(i)->Clone("hS"));
@@ -216,6 +217,7 @@ std::pair<double, double> ResolutionProcessing::energyResolution(TH1 *hist)
 //}
 std::pair<double, double> ResolutionProcessing::timeResolution(TH1 *hist)
 {
+    gStyle->SetOptFit(1111);
     auto binMax{hist->GetMaximumBin()};
     auto xMax{hist->GetBinCenter(hist->GetBin(binMax))};
     auto rcAmp{hist->GetBinContent(hist->GetXaxis()->FindBin(xMax - 25.0))};
@@ -253,15 +255,15 @@ std::pair<double, double> ResolutionProcessing::timeResolution(TH1 *hist)
     f.SetParameter(6, rcAmp);
     f.FixParameter(7, 0.0);
 
-    f.SetParLimits(1, 0.9 * xMax, 1.1 * xMax);
+//    f.SetParLimits(1, 0.9 * xMax, 1.1 * xMax);
     f.SetParLimits(2, 1.5, 3.0);
     f.SetParLimits(3, 0.0, snPeakAmp);
-    f.SetParLimits(4, 5.0, 20.0);
+//    f.SetParLimits(4, 5.0, 20.0);
     f.SetParLimits(5, 2.0, 7.0);
 
 // hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 40.0, f->GetParameter(1) + 25.0);
 
-    hist->Fit(&f, "RQ0");
+    hist->Fit(&f, "RQ");
 
     auto fff = [](double *x, double *par){
         double arg{0};

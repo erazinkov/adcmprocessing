@@ -2,7 +2,7 @@
 
 #include <TF1.h>
 #include <TList.h>
-
+#include <TStyle.h>
 
 TimePeaksFinder::TimePeaksFinder()
 {
@@ -11,6 +11,7 @@ TimePeaksFinder::TimePeaksFinder()
 double TimePeaksFinder::calculatePeakPos(TH1 *hist)
 {
     gErrorIgnoreLevel = 3'000;
+    gStyle->SetOptFit(1111);
     auto timePeakPos{0.0};
 
     auto binMax{hist->GetMaximumBin()};
@@ -56,7 +57,7 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
 
     // hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 40.0, f->GetParameter(1) + 25.0);
 
-    hist->Fit(f.get(), "RQ0N");
+    hist->Fit(f.get(), "RQ");
 
     auto fff = [](double *x, double *par){
         double arg{0};
@@ -100,7 +101,7 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
 std::pair<double, double> TimePeaksFinder::calculateResolution(TH1 *hist)
 {
     gErrorIgnoreLevel = 3'000;
-
+    gStyle->SetOptFit(1111);
     auto binMax{hist->GetMaximumBin()};
     auto xMax{hist->GetBinCenter(hist->GetBin(binMax))};
     auto rcAmp{hist->GetBinContent(hist->GetXaxis()->FindBin(xMax - 25.0))};
@@ -124,7 +125,7 @@ std::pair<double, double> TimePeaksFinder::calculateResolution(TH1 *hist)
     f->SetParameter(3, rcAmp);
     f->FixParameter(4, 0.0);
 
-    hist->Fit(f, "RQ0N");
+    hist->Fit(f, "RQ");
 
     TF1 *fOb{new TF1("fOb", fff, xMax - 50.0, xMax + 50.0, 5)};
     fOb->SetParameters(f->GetParameters());

@@ -10,6 +10,7 @@
 #include "constants.h"
 #include "consoletable.h"
 
+
 bool createOutputDirectory(const std::string& path);
 
 int main(int argc, char *argv[])
@@ -35,14 +36,24 @@ int main(int argc, char *argv[])
     }
 
 
-    HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
-    Calibration calibration(filePath.filename().string(), &histogramManager);
-    start = std::chrono::steady_clock::now();
-//    calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
-    calibration.setNewData_o(decoder.events_o(), decoder.channels(), decoder.time(), decoder.counters());
-    calibration.process();
+//    HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
+//    Calibration calibration(filePath.filename().string(), &histogramManager);
+//    start = std::chrono::steady_clock::now();
+////    calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
+//    calibration.setNewData_o(decoder.events_o(), decoder.channels(), decoder.time(), decoder.counters());
+//    calibration.process();
     stop = std::chrono::steady_clock::now();
     auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
+
+    std::ofstream ofs("counters.txt", std::ios::out | std::ios::app);
+    if (ofs.is_open()) {
+        ofs << filePath;
+        for (const auto &[key, value] : decoder.counters()) {
+            ofs << " " << value;
+        }
+        ofs << std::endl;
+        ofs.close();
+    }
 
     auto eventsNumber{0};
     for (const auto& pair : decoder.events_o()) {

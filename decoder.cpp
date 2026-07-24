@@ -99,7 +99,7 @@ void Decoder::process(const std::string &filePath)
                 continue;
             }
             for (size_t i{0}; i < counters.n; ++i) {
-                counters_[i] = counters.rawhits.at(i);
+                counters_[i] += counters.rawhits.at(i);
             }
             time_ += counters.time;
 
