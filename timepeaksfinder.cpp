@@ -55,7 +55,7 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
     f->SetParLimits(4, 5.0, 20.0);
     f->SetParLimits(5, 2.0, 7.0);
 
-    // hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 40.0, f->GetParameter(1) + 25.0);
+    hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 40.0, f->GetParameter(1) + 25.0);
 
     hist->Fit(f.get(), "RQ");
 

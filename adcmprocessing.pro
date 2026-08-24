@@ -9,16 +9,15 @@ CONFIG -= app_bundle
 
 SOURCES += \
         calibration.cpp \
-#        channelmap.cpp \
-    consoletable.cpp \
+        consoletable.cpp \
         decoder.cpp \
         energypeak.cpp \
-    energypeakfinder.cpp \
+        energypeakfinder.cpp \
         histogrammanager.cpp \
         main.cpp \
         piecewiselinearfunction.cpp \
-    resolutionprocessing.cpp \
-    timepeaksfinder.cpp
+        resolutionprocessing.cpp \
+        timepeaksfinder.cpp
 
 
 
@@ -28,18 +27,17 @@ LIBS += $$system(root-config --libs) -lMinuit -lSpectrum
 HEADERS += \
         adcm_df.h \
         calibration.h \
-#        channelmap.h \
-    consoletable.h \
+        consoletable.h \
         constants.h \
         decoder.h \
         energypeak.h \
-    energypeakfinder.h \
+        energypeakfinder.h \
         histogrammanager.h \
         piecewiselinearfunction.h \
         progressbar.h \
-    resolutionprocessing.h \
+        resolutionprocessing.h \
         spinner.h \
-    timepeaksfinder.h \
+        timepeaksfinder.h \
         utils.h
 
 # Default rules for deployment.
