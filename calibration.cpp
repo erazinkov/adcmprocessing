@@ -50,12 +50,9 @@ void Calibration::process()
     }
     c_t.get()->Print((psName_t + ']').c_str());
 
-    //            timeCorrections_[p] = histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia)->GetBinCenter(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia)->GetMaximumBin());
-
     fillHistsTimeByGammaAlpha(histogramManager_->histsTimeCorrectedByGammaAlpha(), true);
 
     fillHistsAmpByGammaAlpha(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
-
 
     fillHistsAmpByGamma(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
 
@@ -68,14 +65,12 @@ void Calibration::process()
         energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i), histogramManager_->histsAmpByGammaRc().at(i));
         energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
         c->cd(1);
-        histogramManager_->histsAmpByGamma().at(i)->GetXaxis()->SetRangeUser(0.0, 2'000.0);
         histogramManager_->histsAmpByGamma().at(i)->Draw();
         auto listOfFunctionsSg{histogramManager_->histsAmpByGamma().at(i)->GetListOfFunctions()};
         for (auto *item : *listOfFunctionsSg) {
             item->Draw("SAME");
         }
         c->cd(2);
-        histogramManager_->histsAmpByGammaRc().at(i)->GetXaxis()->SetRangeUser(0.0, 2'000.0);
         histogramManager_->histsAmpByGammaRc().at(i)->Draw();
         auto listOfFunctionsRc{histogramManager_->histsAmpByGammaRc().at(i)->GetListOfFunctions()};
         for (auto *item : *listOfFunctionsRc) {
@@ -95,7 +90,7 @@ void Calibration::process()
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
 
     const auto rFname{AppConstants::OUTPUT_PATH + fileName_};
-    TFile *rootFile = new TFile((rFname + ".root").c_str(), "RECREATE");
+    TFile *rootFile{new TFile((rFname + ".root").c_str(), "RECREATE")};
     histogramManager_->histEnergyTotal()->Write();
     rootFile->Close();
 
@@ -136,8 +131,7 @@ void Calibration::fillHistsTimeByGammaAlpha(const std::vector<std::vector<TH1D *
 void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<TH1D *> > &hists)
 {
     std::vector<TF1> fs;
-    for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i)
-    {
+    for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i) {
         PiecewiseLinearFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
@@ -187,14 +181,14 @@ void Calibration::fillHistsTimeWithEnergyCutByGamma(const std::vector<std::vecto
     }
 }
 
-void Calibration::fillHistTime(const std::vector<dec_ev_m_t> &events, TH1 *h, double correction)
+void Calibration::fillHistTime(const std::vector<dec_ev_t> &events, TH1 *h, double correction)
 {
     for (const auto & item : events) {
         h->Fill(item.tdc - correction);
     }
 }
 
-void Calibration::fillHistTimeWithEnergyCut(const std::vector<dec_ev_m_t> &events,
+void Calibration::fillHistTimeWithEnergyCut(const std::vector<dec_ev_t> &events,
                                             TH1 *h,
                                             double correction,
                                             double minE,
@@ -211,20 +205,18 @@ void Calibration::fillHistTimeWithEnergyCut(const std::vector<dec_ev_m_t> &event
     }
 }
 
-void Calibration::fillHistAmp(const std::vector<dec_ev_m_t> &events, TH1 *h, double minT, double maxT, bool exclude)
+void Calibration::fillHistAmp(const std::vector<dec_ev_t> &events, TH1 *h, double minT, double maxT, bool exclude)
 {
     for (const auto & item : events) {
         auto t{static_cast<double>(item.tdc)};
         auto a{static_cast<double>(item.amp)};
-        if (exclude)
-        {
+        if (exclude) {
             if (t < minT || maxT < t)
             {
                 h->Fill(a);
             }
         }
-        else
-        {
+        else {
             if (minT <= t && t <= maxT)
             {
                 h->Fill(a);
@@ -233,20 +225,18 @@ void Calibration::fillHistAmp(const std::vector<dec_ev_m_t> &events, TH1 *h, dou
     }
 }
 
-void Calibration::fillHistEnergy(const std::vector<dec_ev_m_t> &events, TH1 *h, double minT, double maxT, bool exclude, TF1 f)
+void Calibration::fillHistEnergy(const std::vector<dec_ev_t> &events, TH1 *h, double minT, double maxT, bool exclude, TF1 f)
 {
     for (const auto & item : events) {
         auto t{static_cast<double>(item.tdc)};
         auto a{static_cast<double>(item.amp)};
-        if (exclude)
-        {
+        if (exclude) {
             if (t < minT || maxT < t)
             {
                 h->Fill(f.Eval(a));
             }
         }
-        else
-        {
+        else {
             if (minT <= t && t <= maxT)
             {
                 h->Fill(f.Eval(a));
@@ -330,22 +320,8 @@ void Calibration::fillHistsAmpByGamma(const std::vector<std::vector<TH1D *> > &h
 
 void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<TH1D *> > &histsSg, const std::vector<std::vector<TH1D *> > &histsBg)
 {
-
-//    auto ff = [] (double *x, double *par) {
-//        double xx = x[0];
-//        return par[0] + par[1] * xx;
-//    };
-
-//    std::vector<TF1> fs;
-//    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
-//        TF1 f("f", ff, 0, 4'000, 2);
-//        f.SetParameters(0.0, energyPeaksRaw_.at(i).energy() / energyPeaksRaw_.at(i).channel());
-//        fs.push_back(f);
-//    }
-
     std::vector<TF1> fs;
-    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i)
-    {
+    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
         PiecewiseLinearFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
@@ -356,7 +332,6 @@ void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<TH1D
             tasks.push_back([this, &histsSg, &histsBg, i, j, &fs](){
                 histsSg.at(i).at(j)->Reset();
                 histsBg.at(i).at(j)->Reset();
-//                PiecewiseLinearFunction fObj(energyPeaks_.at(i));
                 std::pair<uint8_t, uint8_t> p{*std::next(channels_.g.begin(), i), *std::next(channels_.a.begin(), j)};
                 if (events_m_.find(p) != events_m_.end()) {
                     auto minT_sg{timeCorrections_.at({i, j}) - 3.0};
@@ -401,10 +376,7 @@ void Calibration::fillHistsEnergyByAlpha(const std::vector<std::vector<TH1D *> >
     }
 };
 
-void Calibration::setNewData(const std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t> > &events,
-                             const dec_ch_t &channels,
-                             double time,
-                             const std::map<uint8_t, uint32_t> &counters)
+void Calibration::setNewData(const std::unordered_map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_t>, PairHash> &events, const dec_ch_t &channels, double time, const std::map<uint8_t, uint32_t> &counters)
 {
     time_ += time;
     for (const auto& [key, vec] : events) {
@@ -444,65 +416,6 @@ void Calibration::setNewData(const std::map<std::pair<uint8_t, uint8_t>, std::ve
             }
         }
     }
-}
-
-void Calibration::setNewData_o(const std::unordered_map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>, PairHash> &events_o, const dec_ch_t &channels, double time, const std::map<uint8_t, uint32_t> &counters)
-{
-    time_ += time;
-    for (const auto& [key, vec] : events_o) {
-        auto [it, inserted] = events_m_.try_emplace(key, vec);
-        if (!inserted) {
-            it->second.insert(it->second.end(), vec.begin(), vec.end());
-        }
-    }
-    for (const auto& [key, value] : counters) {
-        auto [it, inserted] = counters_.try_emplace(key, value);
-        if (!inserted) {
-            it->second = value;
-        }
-    }
-    countersG_.clear();
-    countersA_.clear();
-    channels_ = channels;
-    for (size_t i{0}; i < channels_.g.size(); ++i) {
-        uint8_t key{*std::next(channels_.g.begin(), i)};
-        auto it = counters_.find(key);
-        if (it != counters_.end()) {
-            auto value{it->second};
-            auto [itt, inserted] = countersG_.try_emplace(i, value);
-            if (!inserted) {
-                itt->second = value;
-            }
-        }
-    }
-    for (size_t i{0}; i < channels_.a.size(); ++i) {
-        uint8_t key{*std::next(channels_.a.begin(), i)};
-        auto it = counters_.find(key);
-        if (it != counters_.end()) {
-            auto value{it->second};
-            auto [itt, inserted] = countersA_.try_emplace(i, value);
-            if (!inserted) {
-                itt->second = value;
-            }
-        }
-    }
-}
-
-void Calibration::resetData()
-{
-    std::cout << "Reset events - ";
-    for (auto& [key, vec] : events_m_) {
-        vec.clear();
-    }
-    std::cout << "Done" << std::endl;
-    std::cout << "Reset time - ";
-    time_ = 0.0;
-    std::cout << "Done" << std::endl;
-    std::cout << "Reset counters - ";
-    for (auto& [key, value] : counters_) {
-        value = 0;
-    }
-    std::cout << "Done" << std::endl;
 }
 
 double Calibration::time() const

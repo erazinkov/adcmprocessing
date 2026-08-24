@@ -49,7 +49,6 @@ void Decoder::process(const std::string &filePath)
         {
             currentPosition = static_cast<u_int64_t>(ifs_.tellg());
             ifs_ >> cmap;
-            // currentPosition -= sizeof(stor_packet_hdr_t);
             ProgressBar<u_int64_t>::show(currentPosition, size);
             continue;
         }
@@ -61,22 +60,7 @@ void Decoder::process(const std::string &filePath)
                 case 2:
                 {
                     ifs_ >> *g >> *a;
-//                    if (events_.find({g->ch, a->ch}) == events_.end()) {
-//                        channels_.g.insert(g->ch);
-//                        channels_.a.insert(a->ch);
-//                    }
-//                    events_[{g->ch, a->ch}].emplace_back(dec_ev_m_t{g->t - a->t, g->a});
-                    events_o_[{g->ch, a->ch}].emplace_back(dec_ev_m_t{g->t - a->t, g->a});
-//                    g = nullptr;
-//                    a = nullptr;
-
-
-//                    std::unique_ptr<stor_puls_t> g{new stor_puls_t()};
-//                    std::unique_ptr<stor_puls_t> a{new stor_puls_t()};
-//                    ifs_ >> *g.get() >> *a.get();
-//                    events_[{g.get()->ch, a.get()->ch}].emplace_back(dec_ev_m_t{g.get()->t - a.get()->t, g.get()->a});
-//                    channels_.g.insert(g.get()->ch);
-//                    channels_.a.insert(a.get()->ch);
+                    events_[{g->ch, a->ch}].emplace_back(dec_ev_t{g->t - a->t, g->a});
                     break;
                 }
                 default:
@@ -117,7 +101,7 @@ void Decoder::process(const std::string &filePath)
     std::cout << std::endl;
     std::set<uint8_t> first_set, second_set;
 
-    for (const auto& [key, value] : events_o_) {
+    for (const auto& [key, value] : events_) {
         first_set.insert(key.first);
         second_set.insert(key.second);
     }
@@ -131,11 +115,6 @@ const dec_ch_t &Decoder::channels() const
     return channels_;
 }
 
-const std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>> &Decoder::events() const
-{
-    return events_;
-}
-
 double Decoder::time() const
 {
     return time_;
@@ -146,8 +125,8 @@ const std::map<uint8_t, uint32_t> &Decoder::counters() const
     return counters_;
 }
 
-const std::unordered_map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>, PairHash> &Decoder::events_o() const
+const std::unordered_map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_t>, PairHash> &Decoder::events() const
 {
-    return events_o_;
+    return events_;
 }
 

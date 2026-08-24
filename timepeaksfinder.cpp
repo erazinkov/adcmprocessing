@@ -38,7 +38,7 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
        return fitval;
    };
 
-    std::unique_ptr<TF1> f = std::make_unique<TF1>("f", ff, xMax - 15.0, xMax + 25.0, 8);
+    std::unique_ptr<TF1> f{std::make_unique<TF1>("f", ff, xMax - 15.0, xMax + 25.0, 8)};
 
     f->SetParameter(0, obPeakAmp);
     f->SetParameter(1, xMax);

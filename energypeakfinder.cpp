@@ -28,14 +28,14 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::FE1238, fe1238Pos));
     graphPolN.SetPoint(1, fe1238Pos, 1238.0);
 
-//    auto hydPos{getHydrogenPos(histRc)};
-//    energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::HYDROGEN, hydPos));
-//    graphPolN.SetPoint(2, hydPos, 2223.0);
-//    calib_  = (2223.0 - offset_) / hydPos;
-    TF1 fApp1("fApp1", "pol1", 0.0, 8.0e3);
+    auto hydPos{getHydrogenPos(histRc)};
+    energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::HYDROGEN, hydPos));
+    graphPolN.SetPoint(2, hydPos, 2223.0);
+    calib_  = (2223.0 - offset_) / hydPos;
+//    TF1 fApp1("fApp1", "pol1", 0.0, 8.0e3);
     TF1 fApp("fApp", "pol2", 0.0, 8.0e3);
-    graphPolN.Fit(&fApp1, "RQ0");
-    auto carbonPos{getCarbonPos(hist, fApp1.GetX(4438.0))};
+    graphPolN.Fit(&fApp, "RQ0");
+    auto carbonPos{getCarbonPos(hist, fApp.GetX(4438.0))};
     energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::CARBON, carbonPos));
     graphPolN.SetPoint(2, carbonPos, 4438.0);
     calib_  = (4438.0 - offset_) / carbonPos;
@@ -222,7 +222,7 @@ double EnergyPeakFinder::getHydrogenPos(TH1 *h)
 double EnergyPeakFinder::getCarbonPos(TH1 *h, double appPos)
 {
     double pos{appPos};
-    double dL{75};
+    double dL{80};
 //    double dR{150};
     TF1 f("f", "gaus(0) + pol1(3)", pos - dL, pos + dL);
     double amp{h->GetBinContent(h->GetXaxis()->FindBin(pos)) - h->GetBinContent(h->GetXaxis()->FindBin(pos + dL))};

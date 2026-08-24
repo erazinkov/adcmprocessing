@@ -16,16 +16,11 @@ public:
     Calibration(const std::string &fileName, HistogramManager *histogramManager);
 
     void process();
-    void setNewData(const std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>> &events,
+    void setNewData(const std::unordered_map<std::pair<uint8_t, uint8_t>,
+                          std::vector<dec_ev_t>, PairHash> &events,
                     const dec_ch_t &channels,
                     double time,
                     const std::map<uint8_t, uint32_t> &counters);
-    void setNewData_o(const std::unordered_map<std::pair<uint8_t, uint8_t>,
-                          std::vector<dec_ev_m_t>, PairHash> &events_o,
-                    const dec_ch_t &channels,
-                    double time,
-                    const std::map<uint8_t, uint32_t> &counters);
-    void resetData();
     double time() const;
 
     const std::map<uint8_t, double> &counters() const;
@@ -36,7 +31,7 @@ public:
 
 private:
     HistogramManager *histogramManager_;
-    std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_m_t>> events_m_;
+    std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_t>> events_m_;
     double time_;
     std::map<uint8_t, double> counters_;
     std::map<uint8_t, double> countersG_;
@@ -50,11 +45,11 @@ private:
     const std::string fileName_;
 
 
-    void fillHistTime(const std::vector<dec_ev_m_t> &events, TH1 *h, double correction);
-    void fillHistTimeWithEnergyCut(const std::vector<dec_ev_m_t> &events, TH1 *h, double correction, double minE, double maxE, TF1 f);
+    void fillHistTime(const std::vector<dec_ev_t> &events, TH1 *h, double correction);
+    void fillHistTimeWithEnergyCut(const std::vector<dec_ev_t> &events, TH1 *h, double correction, double minE, double maxE, TF1 f);
 
-    void fillHistAmp(const std::vector<dec_ev_m_t> &events, TH1 *h, double minT, double maxT, bool exclude);
-    void fillHistEnergy(const std::vector<dec_ev_m_t> &events, TH1 *h, double minT, double maxT, bool exclude, TF1 f);
+    void fillHistAmp(const std::vector<dec_ev_t> &events, TH1 *h, double minT, double maxT, bool exclude);
+    void fillHistEnergy(const std::vector<dec_ev_t> &events, TH1 *h, double minT, double maxT, bool exclude, TF1 f);
 
     void fillHistsTimeByGammaAlpha(const std::vector<std::vector<TH1D *>> &hists, bool isCorrected = false);
     void fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<TH1D *>> &hists);
