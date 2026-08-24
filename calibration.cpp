@@ -57,29 +57,32 @@ void Calibration::process()
     fillHistsAmpByGamma(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
 
     energyPeaks_.clear();
-    const std::string psName{AppConstants::OUTPUT_PATH + fileName_ + "_energy_peaks_finder_result.ps"};
-    TCanvas *c  = new TCanvas("c", "c", 1024, 960);
-    c->Print((psName + '[').c_str());
-    c->Divide(1, 2);
+    const std::string psName_e{AppConstants::OUTPUT_PATH + fileName_ + "_energy_peaks_finder_result.ps"};
+    std::unique_ptr<TCanvas> c_e{new TCanvas("c_e", "c_e", 1024, 960)};
+//    TCanvas *c  = new TCanvas("c", "c", 1024, 960);
+    c_e.get()->Print((psName_e + '[').c_str());
+    c_e.get()->Divide(1, 2);
     for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
         energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i), histogramManager_->histsAmpByGammaRc().at(i));
         energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
-        c->cd(1);
+        c_e.get()->cd(1);
         histogramManager_->histsAmpByGamma().at(i)->Draw();
+        histogramManager_->histsAmpByGamma().at(i)->SetStats(0);
         auto listOfFunctionsSg{histogramManager_->histsAmpByGamma().at(i)->GetListOfFunctions()};
         for (auto *item : *listOfFunctionsSg) {
             item->Draw("SAME");
         }
-        c->cd(2);
+        c_e.get()->cd(2);
         histogramManager_->histsAmpByGammaRc().at(i)->Draw();
+        histogramManager_->histsAmpByGammaRc().at(i)->SetStats(0);
         auto listOfFunctionsRc{histogramManager_->histsAmpByGammaRc().at(i)->GetListOfFunctions()};
         for (auto *item : *listOfFunctionsRc) {
             item->Draw("SAME");
         }
-        c->Print(psName.c_str());
+        c_e.get()->Print(psName_e.c_str());
     }
-    c->Print((psName + ']').c_str());
-    delete c;
+    c_e.get()->Print((psName_e + ']').c_str());
+
 //    energyPeaksRaw_.clear();
 //    for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
 //        peakFinder_.processRaw(histogramManager_->histsAmpByGammaRc().at(i));
@@ -94,18 +97,17 @@ void Calibration::process()
     histogramManager_->histEnergyTotal()->Write();
     rootFile->Close();
 
-
-    return;
-
-    ResolutionProcessing rP;
-    rP.processingEnergy(AppConstants::OUTPUT_PATH + fileName_, histogramManager_->histsEnergyByGamma(), channels_.g.size());
-    fillHistsEnergyByAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
-    fillHistsTimeByAlpha(histogramManager_->histsTimeCorrectedByGammaAlpha());
     // !
-    fillHistsTimeWithEnergyCutByGammaAlpha(histogramManager_->histsTimeByGammaAlpha());
-    fillHistsTimeWithEnergyCutByGamma(histogramManager_->histsTimeByGammaAlpha());
-    rP.processingTime(AppConstants::OUTPUT_PATH + fileName_, histogramManager_->histsTimeCorrectedByGamma(), channels_.g.size());
-    rP.exportToCSV(AppConstants::OUTPUT_PATH + fileName_);
+
+//    ResolutionProcessing rP;
+//    rP.processingEnergy(AppConstants::OUTPUT_PATH + fileName_, histogramManager_->histsEnergyByGamma(), channels_.g.size());
+//    fillHistsEnergyByAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
+//    fillHistsTimeByAlpha(histogramManager_->histsTimeCorrectedByGammaAlpha());
+
+//    fillHistsTimeWithEnergyCutByGammaAlpha(histogramManager_->histsTimeByGammaAlpha());
+//    fillHistsTimeWithEnergyCutByGamma(histogramManager_->histsTimeByGammaAlpha());
+//    rP.processingTime(AppConstants::OUTPUT_PATH + fileName_, histogramManager_->histsTimeCorrectedByGamma(), channels_.g.size());
+//    rP.exportToCSV(AppConstants::OUTPUT_PATH + fileName_);
 
 }
 

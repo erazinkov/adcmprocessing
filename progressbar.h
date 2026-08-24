@@ -14,7 +14,6 @@ public:
     {
         const int width{50};
         long double progress{static_cast<long double>(current) / static_cast<long double>(total)};
-//        std::cout << current << " " << total  << " " << static_cast<long double>(current) << " " << static_cast<long double>(total) << " " << progress << " " << static_cast<int>(width * progress) << "%\r";
         std::cout.flush();
         int pos{static_cast<int>(width * progress)};
         std::cout << "[";

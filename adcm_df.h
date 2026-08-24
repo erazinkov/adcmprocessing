@@ -83,8 +83,8 @@ struct dec_det_t
 } __attribute__ ((packed));
 
 struct dec_ev_t {
-    float tdc;
-    float amp;
+    float tdc;  // delta time = gamma_time - alpha_time
+    float amp;  // detector amplitude
 } __attribute__ ((packed));
 
 //struct dec_ev_t
