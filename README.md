@@ -3,7 +3,7 @@
 Console Application for spectrum analysis (Tagged Neutron Method).
 
 ## Technologies used:
-  * C++17, Qt6, ROOT 6.32.10.
+  * C++17, ROOT 6.32.10.
    > [!IMPORTANT]
   > The correctness of the application's results depends on the experimental setup.
   
