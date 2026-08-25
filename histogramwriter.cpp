@@ -10,7 +10,7 @@ HistogramWriter::HistogramWriter()
 }
 
 HistogramWriter &HistogramWriter::addHist(TH1D *hist) {
-    if (hist) {
+    if (hist && hist->Integral() > std::numeric_limits<double>::epsilon()) {
         hists_.push_back(hist);
     }
     return *this;
@@ -34,11 +34,10 @@ bool HistogramWriter::write(const std::string &fileName, const std::string &opti
     if (hists_.empty()) {
         std::cout << "Warning: No hists to write to " << fileName << std::endl;
     }
-    for (const auto &hist : hists_) {
-        if (hist) {
-            file.get()->Write();
-        }
+    for (auto &hist : hists_) {
+        std::unique_ptr<TH1D> h{reinterpret_cast<TH1D*>(hist->Clone(hist->GetName()))};
+        file.get()->Write(h->GetName(), TObject::kOverwrite);
     }
-    file->Close();
+    file.get()->Close();
     return true;
 }

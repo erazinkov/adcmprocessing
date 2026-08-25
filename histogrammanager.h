@@ -14,14 +14,6 @@ public:
     HistogramManager(const int &gammaNumber, const int &alphaNumber, std::optional<std::string> outputDirectory = std::nullopt);
     ~HistogramManager();
 
-    void printToPsFile(const std::string &psName,
-               std::vector<std::vector<std::shared_ptr<TH1>> > &hists) const;
-    void printToPsFile(const std::string &fileName,
-                                 std::vector<std::shared_ptr<TH1> > &hists) const;
-    void printToPsFile(const std::string &psName,
-               std::shared_ptr<TH1> hist) const;
-    void saveToRootFile(const std::string &fileName,
-                        std::shared_ptr<TH1> hist) const;
     void resetAll();
 
     const std::vector<std::vector<TH1D *> > &histsAmpByGammaAlpha() const;
@@ -56,6 +48,10 @@ public:
     TH1D *histEnergyTotal() const;
 
     std::vector<TH1D *> histsTimeCorrectedByGamma() const;
+
+    int gammaNumber() const;
+
+    int alphaNumber() const;
 
 private:
     const int gammaNumber_;

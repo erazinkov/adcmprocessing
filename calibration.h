@@ -3,7 +3,6 @@
 
 #include "adcm_df.h"
 
-
 #include "histogrammanager.h"
 #include "energypeak.h"
 #include "energypeakfinder.h"
@@ -13,7 +12,7 @@
 class Calibration
 {
 public:
-    Calibration(const std::string &fileName, HistogramManager *histogramManager);
+    Calibration(HistogramManager *histogramManager);
 
     void process();
     void setNewData(const std::unordered_map<std::pair<uint8_t, uint8_t>,
@@ -42,8 +41,6 @@ private:
     std::vector<EnergyPeak>  energyPeaksRaw_;
 
     EnergyPeakFinder energyPeakFinder_;
-    const std::string fileName_;
-
 
     void fillHistTime(const std::vector<dec_ev_t> &events, TH1 *h, double correction);
     void fillHistTimeWithEnergyCut(const std::vector<dec_ev_t> &events, TH1 *h, double correction, double minE, double maxE, TF1 f);
@@ -73,11 +70,6 @@ private:
                                   const std::vector<std::vector<TH1D *> > &histsBg);
     void fillHistsEnergyByAlpha(const std::vector<std::vector<TH1D *> > &histsSg,
                                   const std::vector<std::vector<TH1D *> > &histsBg);
-
-
-    std::vector<std::vector<double>> _timePeaksPos;
-
-
 
 };
 

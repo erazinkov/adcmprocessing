@@ -14,6 +14,7 @@ SOURCES += \
         energypeak.cpp \
         energypeakfinder.cpp \
         histogrammanager.cpp \
+        histogrampainter.cpp \
         histogramwriter.cpp \
         main.cpp \
         piecewiselinearfunction.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
         energypeak.h \
         energypeakfinder.h \
         histogrammanager.h \
+        histogrampainter.h \
         histogramwriter.h \
         piecewiselinearfunction.h \
         progressbar.h \

@@ -1,11 +1,7 @@
 #include "histogrammanager.h"
 
-
-#include <TCanvas.h>
-#include <TError.h>
-#include <TFile.h>
-
-HistogramManager::HistogramManager(const int &gammaNumber, const int &alphaNumber, std::optional<std::string> outputDirectory) : gammaNumber_{gammaNumber}, alphaNumber_{alphaNumber}, outputDirectory_{outputDirectory}
+HistogramManager::HistogramManager(const int &gammaNumber, const int &alphaNumber, std::optional<std::string> outputDirectory)
+    : gammaNumber_{gammaNumber}, alphaNumber_{alphaNumber}, outputDirectory_{outputDirectory}
 {
     histTimeTotal_ = new TH1D("hist_time_total", "hist_time_total", BINS_TIME, XLOW_TIME, XUP_TIME);
     histTimeTotal_->Sumw2();
@@ -200,109 +196,6 @@ HistogramManager::~HistogramManager()
     }
 }
 
-void HistogramManager::printToPsFile(const std::string &fileName,
-                             std::vector<std::shared_ptr<TH1> > &hists) const
-{
-    const std::string psName{(outputDirectory_.has_value() ? (outputDirectory_.value() + "/") : " ") + fileName + ".ps"};
-    gErrorIgnoreLevel = 3'000;
-    std::unique_ptr<TCanvas> c{new TCanvas("c", "c", 1024, 960)};
-    c.get()->Print((psName + '[').c_str());
-    for (size_t ig{0}; ig < hists.size(); ++ig) {
-        hists.at(ig).get()->Draw();
-        auto listOfFunctions{hists.at(ig).get()->GetListOfFunctions()};
-        for (auto *item : *listOfFunctions) {
-            item->Draw("SAME");
-        }
-        c.get()->Print(psName.c_str());
-    }
-    c.get()->Print((psName + ']').c_str());
-    gErrorIgnoreLevel = 0;
-}
-
-void HistogramManager::printToPsFile(const std::string &fileName,
-                             std::vector<std::vector<std::shared_ptr<TH1> > > &hists) const
-{
-    const std::string psName{(outputDirectory_.has_value() ? (outputDirectory_.value() + "/") : " ") + fileName + ".ps"};
-    gErrorIgnoreLevel = 3'000;
-    std::unique_ptr<TCanvas> c{new TCanvas("c", "c", 1024, 960)};
-    c.get()->Print((psName + '[').c_str());
-    for (size_t ig{0}; ig < hists.size(); ++ig)
-    {
-        auto cd{static_cast<int>(std::ceil(std::sqrt(hists.at(ig).size())))};
-        c.get()->Divide(cd, cd);
-        for (size_t ia{0}; ia <  hists.at(ig).size(); ++ia)
-        {
-            c.get()->cd(static_cast<int>(ia) + 1);
-            hists.at(ig).at(ia).get()->Draw();
-            auto listOfFunctions{hists.at(ig).at(ia).get()->GetListOfFunctions()};
-            for (auto *item : *listOfFunctions)
-            {
-                item->Draw("SAME");
-            }
-        }
-        c.get()->Print(psName.c_str());
-        c.get()->Clear();
-    }
-    c.get()->Print((psName + ']').c_str());
-    c.get()->Delete();
-    gErrorIgnoreLevel = 0;
-}
-
-//void HistogramManager::printToPsFile(const std::string &fileName,
-//                             std::vector<std::vector<std::shared_ptr<TH1> > > &hists) const
-//{
-//    const std::string psName{(_outputDirectory.has_value() ? (_outputDirectory.value() + "/") : " ") + fileName + ".ps"};
-//    gErrorIgnoreLevel = 3'000;
-//    std::unique_ptr<TCanvas> c{new TCanvas("c", "c", 1024, 960)};
-//    c.get()->Print((psName + '[').c_str());
-//    for (size_t ig{0}; ig < hists.size(); ++ig)
-//    {
-//        auto cd{static_cast<int>(std::ceil(std::sqrt(hists.at(ig).size())))};
-//        c.get()->Divide(cd, cd);
-//        for (size_t ia{0}; ia <  hists.at(ig).size(); ++ia)
-//        {
-//            c.get()->cd(static_cast<int>(ia) + 1);
-//            hists.at(ig).at(ia).get()->Draw();
-//            auto listOfFunctions{hists.at(ig).at(ia).get()->GetListOfFunctions()};
-//            for (auto *item : *listOfFunctions)
-//            {
-//                item->Draw("SAME");
-//            }
-//        }
-//        c.get()->Print(psName.c_str());
-//        c.get()->Clear();
-//    }
-//    c.get()->Print((psName + ']').c_str());
-//    gErrorIgnoreLevel = 0;
-//}
-
-void HistogramManager::printToPsFile(const std::string &fileName, std::shared_ptr<TH1> hist) const
-{
-    const std::string psName{(outputDirectory_.has_value() ? (outputDirectory_.value() + "/") : "") + fileName + ".ps"};
-    gErrorIgnoreLevel = 3'000;
-    std::unique_ptr<TCanvas> c{new TCanvas("c", "c", 1024, 960)};
-    c.get()->Print((psName + '[').c_str());
-    hist.get()->Draw();
-    auto listOfFunctions{hist->GetListOfFunctions()};
-    for (auto *item : *listOfFunctions)
-    {
-//        item->Draw("SAME");
-    }
-    c.get()->Print(psName.c_str());
-    c.get()->Print((psName + ']').c_str());
-    gErrorIgnoreLevel = 0;
-}
-
-void HistogramManager::saveToRootFile(const std::string &fileName, std::shared_ptr<TH1> hist) const
-{
-    const std::string rootName{(outputDirectory_.has_value() ? (outputDirectory_.value() + "/") : " ") + fileName + ".root"};
-    std::unique_ptr<TFile> file{TFile::Open(rootName.c_str(), "RECREATE")};
-    if (file.get()->IsOpen())
-    {
-        hist.get()->Write(hist->GetName(), TObject::kOverwrite);
-    }
-}
-
 void HistogramManager::resetAll()
 {
     for (auto ig{0}; ig < gammaNumber_; ig++) {
@@ -410,4 +303,14 @@ TH1D *HistogramManager::histEnergyTotal() const
 std::vector<TH1D *> HistogramManager::histsTimeCorrectedByGamma() const
 {
     return histsTimeCorrectedByGamma_;
+}
+
+int HistogramManager::gammaNumber() const
+{
+    return gammaNumber_;
+}
+
+int HistogramManager::alphaNumber() const
+{
+    return alphaNumber_;
 }

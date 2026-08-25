@@ -1,20 +1,14 @@
 #include "calibration.h"
-
-#include <TCanvas.h>
-#include <TFile.h>
-
 #include "utils.h"
-#include "constants.h"
 #include "piecewiselinearfunction.h"
-
 #include "timepeaksfinder.h"
 #include "resolutionprocessing.h"
 
-Calibration::Calibration(const std::string &fileName, HistogramManager *histogramManager)
-    : histogramManager_{histogramManager}, fileName_{fileName}
+Calibration::Calibration(HistogramManager *histogramManager)
+    : histogramManager_{histogramManager}
 {
-    for (auto ig{0}; ig < AppConstants::MAX_GAMMA_NUMBER; ++ig) {
-        for (auto ia{0}; ia < AppConstants::MAX_ALPHA_NUMBER; ++ia) {
+    for (auto ig{0}; ig < histogramManager->gammaNumber(); ++ig) {
+        for (auto ia{0}; ia < histogramManager->alphaNumber(); ++ia) {
             std::pair<uint8_t, uint8_t> p{ig, ia};
             timeCorrections_[p] = 0.0;
         }
@@ -35,31 +29,6 @@ void Calibration::process()
         }
     }
 
-//    // TODO
-//    const std::string psName_t{AppConstants::OUTPUT_PATH + fileName_ + "_time_peaks_finder_result.ps"};
-//    std::unique_ptr<TCanvas> c_t{new TCanvas("c_t", "c_t", 1024, 960)};
-//    c_t.get()->Print((psName_t + '[').c_str());
-//    const auto igMax = std::min(histogramManager_->histsTimeByGammaAlpha().size(), channels_.g.size());
-//    const auto iaMax = std::min(histogramManager_->histsTimeByGammaAlpha().at(0).size(), channels_.a.size());
-//    for (size_t ig{0}; ig < igMax; ++ig) {
-//        auto cd{static_cast<int>(std::ceil(std::sqrt(histogramManager_->histsTimeByGammaAlpha().at(0).size())))};
-//        c_t.get()->Divide(cd, cd);
-//        for (size_t ia{0}; ia <  iaMax; ++ia) {
-//            c_t.get()->cd(static_cast<int>(ia) + 1);
-//            std::pair<uint8_t, uint8_t> p{ig, ia};
-//            timeCorrections_[p] = TimePeaksFinder::calculatePeakPos(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia));
-//            histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia)->Draw();
-//            auto listOfFunctionsSg{histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia)->GetListOfFunctions()};
-//            for (auto *item : *listOfFunctionsSg) {
-//                item->Draw("SAME");
-//            }
-//        }
-
-//        c_t.get()->Print(psName_t.c_str());
-//        c_t.get()->Clear();
-//    }
-//    c_t.get()->Print((psName_t + ']').c_str());
-
     fillHistsTimeByGammaAlpha(histogramManager_->histsTimeCorrectedByGammaAlpha(), true);
 
     fillHistsAmpByGammaAlpha(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
@@ -73,46 +42,8 @@ void Calibration::process()
         energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
     }
 
-//    const std::string psName_e{AppConstants::OUTPUT_PATH + fileName_ + "_energy_peaks_finder_result.ps"};
-//    std::unique_ptr<TCanvas> c_e{new TCanvas("c_e", "c_e", 1024, 960)};
-////    TCanvas *c  = new TCanvas("c", "c", 1024, 960);
-//    c_e.get()->Print((psName_e + '[').c_str());
-//    c_e.get()->Divide(1, 2);
-//    for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-//        energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i), histogramManager_->histsAmpByGammaRc().at(i));
-//        energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
-//        c_e.get()->cd(1);
-//        histogramManager_->histsAmpByGamma().at(i)->Draw();
-//        histogramManager_->histsAmpByGamma().at(i)->SetStats(0);
-//        auto listOfFunctionsSg{histogramManager_->histsAmpByGamma().at(i)->GetListOfFunctions()};
-//        for (auto *item : *listOfFunctionsSg) {
-//            item->Draw("SAME");
-//        }
-//        c_e.get()->cd(2);
-//        histogramManager_->histsAmpByGammaRc().at(i)->Draw();
-//        histogramManager_->histsAmpByGammaRc().at(i)->SetStats(0);
-//        auto listOfFunctionsRc{histogramManager_->histsAmpByGammaRc().at(i)->GetListOfFunctions()};
-//        for (auto *item : *listOfFunctionsRc) {
-//            item->Draw("SAME");
-//        }
-//        c_e.get()->Print(psName_e.c_str());
-//    }
-//    c_e.get()->Print((psName_e + ']').c_str());
-
-//    energyPeaksRaw_.clear();
-//    for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-//        peakFinder_.processRaw(histogramManager_->histsAmpByGammaRc().at(i));
-//        energyPeaksRaw_.push_back(peakFinder_.energyPeak());
-//    }
-
     fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
-
-//    const auto rFname{AppConstants::OUTPUT_PATH + fileName_};
-//    TFile *rootFile{new TFile((rFname + ".root").c_str(), "RECREATE")};
-//    histogramManager_->histEnergyTotal()->Write();
-//    rootFile->Close();
-
     // !
 
 //    ResolutionProcessing rP;
@@ -164,10 +95,8 @@ void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::
                     fillHistTimeWithEnergyCut(events_m_.at(p),
                                               hists.at(i).at(j),
                                               timeCorrections_.at({i, j}),
-//                                              4438.0 - 250.0,
-//                                              4438.0 + 250.0,
-                                              0.0,
-                                              8'000.0,
+                                              4438.0 - 250.0,
+                                              4438.0 + 250.0,
                                               fs.at(i));
                 }
             });
@@ -229,14 +158,12 @@ void Calibration::fillHistAmp(const std::vector<dec_ev_t> &events, TH1 *h, doubl
         auto t{static_cast<double>(item.tdc)};
         auto a{static_cast<double>(item.amp)};
         if (exclude) {
-            if (t < minT || maxT < t)
-            {
+            if (t < minT || maxT < t) {
                 h->Fill(a);
             }
         }
         else {
-            if (minT <= t && t <= maxT)
-            {
+            if (minT <= t && t <= maxT) {
                 h->Fill(a);
             }
         }
@@ -249,14 +176,12 @@ void Calibration::fillHistEnergy(const std::vector<dec_ev_t> &events, TH1 *h, do
         auto t{static_cast<double>(item.tdc)};
         auto a{static_cast<double>(item.amp)};
         if (exclude) {
-            if (t < minT || maxT < t)
-            {
+            if (t < minT || maxT < t) {
                 h->Fill(f.Eval(a));
             }
         }
         else {
-            if (minT <= t && t <= maxT)
-            {
+            if (minT <= t && t <= maxT) {
                 h->Fill(f.Eval(a));
             }
         }

@@ -7,6 +7,7 @@
 #include "histogrammanager.h"
 #include "calibration.h"
 #include "histogramwriter.h"
+#include "histogrampainter.h"
 
 #include "constants.h"
 #include "consoletable.h"
@@ -37,17 +38,20 @@ int main(int argc, char *argv[])
 
     HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
 
-    Calibration calibration(filePath.filename().string(), &histogramManager);
+    Calibration calibration(&histogramManager);
     start = std::chrono::steady_clock::now();
     calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
     calibration.process();
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
-    const auto rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
+    const std::string rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
     if (histogramWriter.write(rootFileName)) {
         std::cout << "Histograms successfully written to file " << rootFileName << std::endl;
     }
+    HistogramPainter::paintHist(histogramManager.histEnergyTotal(), AppConstants::OUTPUT_PATH + filePath.filename().string() + ".ps");
+    HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".ps");
+    HistogramPainter::paintHists(histogramManager.histsAmpByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_sg" + ".ps");
     auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
     std::ofstream ofs("counters.txt", std::ios::out | std::ios::app);
