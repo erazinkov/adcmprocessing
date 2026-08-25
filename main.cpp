@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
     auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
     if (decoder.events().empty() || decoder.time() < std::numeric_limits<double>::epsilon() || decoder.counters().empty()) {
+        std::cout << "No valid data in file " << filePath << std::endl;
         return 1;
     }
 
