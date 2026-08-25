@@ -1,10 +1,12 @@
-#include <QCoreApplication>
+//#include <QCoreApplication>
 
 #include <iostream>
+#include <limits>
 
 #include "decoder.h"
 #include "histogrammanager.h"
 #include "calibration.h"
+#include "histogramwriter.h"
 
 #include "constants.h"
 #include "consoletable.h"
@@ -28,16 +30,23 @@ int main(int argc, char *argv[])
     auto stop = std::chrono::steady_clock::now();
     auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
-    if (decoder.events().empty() || qFuzzyCompare(decoder.time(), 0.0) || decoder.counters().empty()) {
+    if (decoder.events().empty() || decoder.time() < std::numeric_limits<double>::epsilon() || decoder.counters().empty()) {
         return 1;
     }
 
     HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
+
     Calibration calibration(filePath.filename().string(), &histogramManager);
     start = std::chrono::steady_clock::now();
     calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
     calibration.process();
     stop = std::chrono::steady_clock::now();
+    HistogramWriter histogramWriter;
+    histogramWriter.addHist(histogramManager.histEnergyTotal());
+    const auto rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
+    if (histogramWriter.write(rootFileName)) {
+        std::cout << "Histograms successfully written to file " << rootFileName << std::endl;
+    }
     auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
     std::ofstream ofs("counters.txt", std::ios::out | std::ios::app);

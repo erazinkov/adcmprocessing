@@ -79,9 +79,6 @@ private:
     std::vector<std::vector<TH1D *>> histsAmpByGammaAlphaRc_;
     std::vector<std::vector<TH1D *>> histsTimeByGammaAlpha_;
 
-
-
-
     std::vector<std::vector<TH1D *>> histsTimeCorrectedByGammaAlpha_;
     std::vector<TH1D *> histsTimeCorrectedByAlpha_;
     std::vector<TH1D *> histsTimeCorrectedByGamma_;
