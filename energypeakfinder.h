@@ -28,7 +28,7 @@ private:
     double getCh(double e) { return (e - offset_) / calib_; }
     double getdCh(double de) { return de / calib_; }
 
-    double getFerrum847PosApprox(TH1 *h, double r = 0.12);
+    double getFerrum847PosApprox(TH1 *h, double r);
     double getFerrum847Pos(TH1 *h);
     double getFerrum1238Pos(TH1 *h);
     double getHydrogenPos(TH1 *h);
@@ -38,6 +38,10 @@ private:
 
     std::vector<EnergyPeak>  energyPeaks_;
     EnergyPeak energyPeak_{EnergyPeak(EnergyPeak::Id::FE847, 0.0)};
+
+    const double A{1.25};
+
+    double getFerrum847PosApprox(TH1 *h);
 
 };
 
