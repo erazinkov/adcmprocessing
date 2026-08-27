@@ -11,6 +11,18 @@
 
 EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
 {
+    fCalib_ = new TF1("fCalib_", "pol2", 0.0, 8.0e3);
+    fCalib_->SetParameter(0, 0.0);
+    fCalib_->SetParameter(1, 1.0);
+    fCalib_->SetParameter(2, 0.0);
+}
+
+EnergyPeakFinder::~EnergyPeakFinder()
+{
+    if (fCalib_) {
+        delete fCalib_;
+        fCalib_ = nullptr;
+    }
 }
 
 void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
@@ -35,7 +47,8 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     auto fe847PosApprox{getFerrum847PosApprox(histRc)};
 
     offset_ = 0.0;
-    calib_ = (peaks.at(peaksIdx.find(EnergyPeak::Id::FE847)->second).energy() - offset_) / fe847PosApprox;
+    calib_ = (peaks.at(peaksIdx.find(EnergyPeak::Id::FE847)->second).energy()) / fe847PosApprox;
+    fCalib_->SetParameter(1, (peaks.at(peaksIdx.find(EnergyPeak::Id::FE847)->second).energy()) / fe847PosApprox);
 
     TGraphErrors graphPolN(peaks.size());
     //
@@ -191,9 +204,11 @@ double EnergyPeakFinder::getFerrum847PosApprox(TH1 *h, double r)
 
 double EnergyPeakFinder::getFerrum847Pos(TH1 *h)
 {
-    double pos{h->GetXaxis()->GetBinCenter(h->GetMaximumBin())};
-    auto peak{EnergyPeak(EnergyPeak::Id::FE847, pos)};
-    double sigma{getCh(TMath::Sqrt(peak.energy()) * A)};
+//    double pos{h->GetXaxis()->GetBinCenter(h->GetMaximumBin())};
+    auto peak{EnergyPeak(EnergyPeak::Id::FE847, 0.0)};
+    double pos{fCalib_->GetX(peak.energy())};
+    peak.setChannel(pos);
+    double sigma{fCalib_->GetX(TMath::Sqrt(peak.energy()) * A)};
 
     double xL{pos - 3.0 * sigma};
     double xR{pos + 3.0 * sigma};
