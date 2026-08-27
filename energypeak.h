@@ -21,6 +21,8 @@ public:
 
     double energy() const;
 
+    void setChannel(double newChannel);
+
 private:
     EnergyPeak::Id id_;
     double channel_;

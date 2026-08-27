@@ -39,3 +39,8 @@ double EnergyPeak::energy() const
 {
     return energy_;
 }
+
+void EnergyPeak::setChannel(double newChannel)
+{
+    channel_ = newChannel;
+}
