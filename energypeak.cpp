@@ -33,10 +33,14 @@ double EnergyPeak::energyById(Id id)
         return 847.0;
     case EnergyPeak::Id::FE1238:
         return 1238.0;
+    case EnergyPeak::Id::HYDROGENADD:
+        return 2100.0;
     case EnergyPeak::Id::HYDROGEN:
-        return 2238.0;
+        return 2223.0;
     case EnergyPeak::Id::CARBON:
         return 4438.0;
+    case EnergyPeak::Id::OXYGENADD:
+        return 6129.0 - 511.0;
     case EnergyPeak::Id::OXYGEN:
         return 6129.0;
     case EnergyPeak::Id::FE7631:

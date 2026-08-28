@@ -9,9 +9,11 @@ public:
     enum class Id {
         FE847,
         FE1238,
+        HYDROGENADD,
         HYDROGEN,
         CARBON,
         OXYGEN,
+        OXYGENADD,
         FE7631
     };
     EnergyPeak(EnergyPeak::Id id, double channel);

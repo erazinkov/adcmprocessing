@@ -48,7 +48,14 @@ private:
 
     TF1 *fCalib_;
 
-    std::map<EnergyPeak::Id, std::function<double(TH1 *)>> peaksPosFunc_;
+    std::map<EnergyPeak::Id, std::function<double(TH1 *hist, TH1 *histRc)>> findPeakPosFunctions_;
+
+    double findPeakPosFerrum847Approx(TH1 *h);
+    double findPeakPosFerrum847(TH1 *h);
+    double findPeakPosFerrum1238(TH1 *h);
+    double findPeakPosHydrogen(TH1 *h);
+    double findPeakPosCarbon(TH1 *h);
+    double findPeakPosOxygen(TH1 *h);
 
 };
 
