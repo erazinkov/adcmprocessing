@@ -32,6 +32,7 @@ void HistogramPainter::paintHists(const std::vector<TH1D *> &hists, const std::s
     c.get()->Print((fileName + '[').c_str());
     for (size_t ig{0}; ig < hists.size(); ++ig) {
         if (hists.at(ig)) {
+            gPad->SetGrid();
             hists.at(ig)->Draw();
             auto listOfFunctions{hists.at(ig)->GetListOfFunctions()};
             for (auto *item : *listOfFunctions) {
