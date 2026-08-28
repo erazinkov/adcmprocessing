@@ -23,6 +23,8 @@ public:
 
     void setChannel(double newChannel);
 
+    static double energyById(EnergyPeak::Id id);
+
 private:
     EnergyPeak::Id id_;
     double channel_;

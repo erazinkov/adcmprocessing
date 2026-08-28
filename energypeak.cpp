@@ -3,26 +3,7 @@
 EnergyPeak::EnergyPeak(EnergyPeak::Id id, double channel) :
     id_(id), channel_(channel)
 {
-    switch (id_) {
-    case EnergyPeak::Id::FE847:
-        energy_ = 847.0;
-        break;
-    case EnergyPeak::Id::FE1238:
-        energy_ = 1238.0;
-        break;
-    case EnergyPeak::Id::HYDROGEN:
-        energy_ = 2238.0;
-        break;
-    case EnergyPeak::Id::CARBON:
-        energy_ = 4438.0;
-        break;
-    case EnergyPeak::Id::OXYGEN:
-        energy_ = 6129.0;
-        break;
-    case EnergyPeak::Id::FE7631:
-        energy_ = 7631.0;
-        break;
-    }
+    energy_ = energyById(id);
 }
 
 EnergyPeak::Id EnergyPeak::id() const
@@ -43,4 +24,23 @@ double EnergyPeak::energy() const
 void EnergyPeak::setChannel(double newChannel)
 {
     channel_ = newChannel;
+}
+
+double EnergyPeak::energyById(Id id)
+{
+    switch (id) {
+    case EnergyPeak::Id::FE847:
+        return 847.0;
+    case EnergyPeak::Id::FE1238:
+        return 1238.0;
+    case EnergyPeak::Id::HYDROGEN:
+        return 2238.0;
+    case EnergyPeak::Id::CARBON:
+        return 4438.0;
+    case EnergyPeak::Id::OXYGEN:
+        return 6129.0;
+    case EnergyPeak::Id::FE7631:
+        return 7631.0;
+    }
+    return 0.0;
 }

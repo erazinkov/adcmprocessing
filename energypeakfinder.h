@@ -44,7 +44,11 @@ private:
 
     double getFerrum847PosApprox(TH1 *h);
 
+    void findPeakPos(EnergyPeak &peak, TH1 *h);
+
     TF1 *fCalib_;
+
+    std::map<EnergyPeak::Id, std::function<double(TH1 *)>> peaksPosFunc_;
 
 };
 

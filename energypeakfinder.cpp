@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <map>
+#include <functional>
 
 EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
 {
@@ -15,6 +16,10 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
     fCalib_->SetParameter(0, 0.0);
     fCalib_->SetParameter(1, 1.0);
     fCalib_->SetParameter(2, 0.0);
+
+    peaksPosFunc_ = {
+        {EnergyPeak::Id::FE847, [&](TH1 *h) { return getFerrum847Pos(h); }},
+    };
 }
 
 EnergyPeakFinder::~EnergyPeakFinder()
@@ -43,6 +48,15 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     for (size_t i{0}; i < peaks.size(); i++) {
         peaksIdx[peaks.at(i).id()] = i;
     }
+
+
+
+
+    std::map<EnergyPeak::Id, std::function<double(TH1 *)>> peaksFunc{
+        {EnergyPeak::Id::FE847, [&](TH1 *h) { return getFerrum847Pos(h); }},
+    };
+
+
 
     auto fe847PosApprox{getFerrum847PosApprox(histRc)};
 
@@ -162,6 +176,25 @@ double EnergyPeakFinder::getFerrum847PosApprox(TH1 *h)
     double pos{h->GetXaxis()->GetBinCenter(h->GetMaximumBin())};
     return pos;
 
+}
+
+void EnergyPeakFinder::findPeakPos(EnergyPeak &peak, TH1 *h)
+{
+    switch (peak.id()) {
+    case EnergyPeak::Id::FE847:
+        getFerrum847Pos(h);
+        break;
+    case EnergyPeak::Id::FE1238:
+        break;
+    case EnergyPeak::Id::HYDROGEN:
+        break;
+    case EnergyPeak::Id::CARBON:
+        break;
+    case EnergyPeak::Id::OXYGEN:
+        break;
+    case EnergyPeak::Id::FE7631:
+        break;
+    }
 }
 
 double EnergyPeakFinder::getFerrum847PosApprox(TH1 *h, double r)
