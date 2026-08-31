@@ -13,8 +13,30 @@
 #include "consoletable.h"
 #include "utils.h"
 
+#include <TFile.h>
+
+void process() {
+    const std::string fileName{"results/sector10.root"};
+    std::unique_ptr<TFile> fileIn{std::make_unique<TFile>(fileName.c_str(), "OPEN")};
+    if (fileIn.get()->IsOpen()) {
+        std::unique_ptr<TH1D> hist{static_cast<TH1D *>(fileIn.get()->Get("hist_amp_by_gamma_0"))};
+        std::unique_ptr<TH1D> histRc{static_cast<TH1D *>(fileIn.get()->Get("hist_amp_by_gamma_rc_0"))};
+        EnergyPeakFinder energyPeakFinder;
+        energyPeakFinder.process(hist.get(), histRc.get());
+        auto listOfFunctions{hist->GetListOfFunctions()};
+        for (auto *item : *listOfFunctions) {
+            item->Delete();
+        }
+    } else {
+        std::cout << "Can\'t open file " << fileName << std::endl;
+    }
+
+}
+
 int main(int argc, char *argv[])
 {
+    process();
+    return 0;
 //    QCoreApplication a(argc, argv);
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <filepath>" << std::endl;
@@ -45,6 +67,7 @@ int main(int argc, char *argv[])
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
+    histogramWriter.addHists(histogramManager.histsAmpByGamma());
     histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
     const std::string rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
     if (histogramWriter.write(rootFileName)) {
