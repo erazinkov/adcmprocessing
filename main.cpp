@@ -19,13 +19,26 @@ void process() {
     const std::string fileName{"results/sector10.root"};
     std::unique_ptr<TFile> fileIn{std::make_unique<TFile>(fileName.c_str(), "OPEN")};
     if (fileIn.get()->IsOpen()) {
-        std::unique_ptr<TH1D> hist{static_cast<TH1D *>(fileIn.get()->Get("hist_amp_by_gamma_0"))};
-        std::unique_ptr<TH1D> histRc{static_cast<TH1D *>(fileIn.get()->Get("hist_amp_by_gamma_rc_0"))};
+        std::unique_ptr<TH1D> hist{static_cast<TH1D *>(fileIn.get()->Get("hist_amp_by_gamma_1"))};
+        hist.get()->SetDirectory(nullptr);
+        std::unique_ptr<TH1D> histRc{static_cast<TH1D *>(fileIn.get()->Get("hist_amp_by_gamma_rc_1"))};
+        histRc.get()->SetDirectory(nullptr);
+        // auto listOfFunctions{hist->GetListOfFunctions()};
+        // for (auto *item : *listOfFunctions) {
+        //     item->Delete();
+        // }
+        // auto listOfFunctionsRc{histRc->GetListOfFunctions()};
+        // for (auto *item : *listOfFunctionsRc) {
+        //     item->Delete();
+        // }
         EnergyPeakFinder energyPeakFinder;
         energyPeakFinder.process(hist.get(), histRc.get());
-        auto listOfFunctions{hist->GetListOfFunctions()};
+        const std::string psFileName{"output_tmp_"};
+        HistogramPainter::paintHist(hist.get(), AppConstants::OUTPUT_PATH + psFileName + ".pdf");
+        auto listOfFunctions{hist.get()->GetListOfFunctions()};
         for (auto *item : *listOfFunctions) {
-            item->Delete();
+            std::cout << item->GetName() << std::endl;
+            // item->Delete();
         }
     } else {
         std::cout << "Can\'t open file " << fileName << std::endl;
