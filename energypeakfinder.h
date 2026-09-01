@@ -13,6 +13,7 @@ public:
     EnergyPeakFinder();
     ~EnergyPeakFinder();
     void process(TH1D *hist, TH1D * histRc);
+    void check(TH1D *hist, TH1D * histRc);
     void processRaw(TH1D *hist);
     const std::vector<EnergyPeak> &energyPeaks() const;
 

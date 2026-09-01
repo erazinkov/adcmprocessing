@@ -35,11 +35,7 @@ void process() {
         energyPeakFinder.process(hist.get(), histRc.get());
         const std::string psFileName{"output_tmp_"};
         HistogramPainter::paintHist(hist.get(), AppConstants::OUTPUT_PATH + psFileName + ".pdf");
-        auto listOfFunctions{hist.get()->GetListOfFunctions()};
-        for (auto *item : *listOfFunctions) {
-            std::cout << item->GetName() << std::endl;
-            // item->Delete();
-        }
+
     } else {
         std::cout << "Can\'t open file " << fileName << std::endl;
     }
@@ -48,8 +44,8 @@ void process() {
 
 int main(int argc, char *argv[])
 {
-    process();
-    return 0;
+    // process();
+    // return 0;
 //    QCoreApplication a(argc, argv);
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " <filepath>" << std::endl;
@@ -80,6 +76,7 @@ int main(int argc, char *argv[])
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
+    histogramWriter.addHists(histogramManager.histsEnergyByGamma());
     histogramWriter.addHists(histogramManager.histsAmpByGamma());
     histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
     const std::string rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
@@ -91,6 +88,7 @@ int main(int argc, char *argv[])
 //    HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".ps");
     HistogramPainter::paintHists(histogramManager.histsAmpByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_sg" + ".ps");
     HistogramPainter::paintHists(histogramManager.histsAmpByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_rc" + ".ps");
+    HistogramPainter::paintHists(histogramManager.histsEnergyByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy" + ".ps");
 
     auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
