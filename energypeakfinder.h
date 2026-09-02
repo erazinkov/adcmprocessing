@@ -30,18 +30,11 @@ private:
     double getCh(double e) { return (e - offset_) / calib_; }
     double getdCh(double de) { return de / calib_; }
 
-    double getFerrum847PosApprox(TH1 *h, double r);
-    double getFerrum847Pos(TH1 *h);
-    double getFerrum1238Pos(TH1 *h);
-    double getHydrogenPos(TH1 *h);
-    double getCarbonPos(TH1 *h, double appPos);
-    double getOxygenPos(TH1 *h, double appPos);
+
     double getFerrum7631Pos(TH1 *h, double appPos);
 
     std::vector<EnergyPeak>  energyPeaks_;
     EnergyPeak energyPeak_{EnergyPeak(EnergyPeak::Id::FE847, 0.0)};
-
-    const double A{1.25};
 
     double getFerrum847PosApprox(TH1 *h);
 
@@ -51,12 +44,12 @@ private:
 
     std::map<EnergyPeak::Id, std::function<double(TH1 *hist, TH1 *histRc)>> findPeakPosFunctions_;
 
-    double findPeakPosFerrum847Approx(TH1 *h);
-    double findPeakPosFerrum847(TH1 *h);
-    double findPeakPosFerrum1238(TH1 *h);
-    double findPeakPosHydrogen(TH1 *h);
-    double findPeakPosCarbon(TH1 *h);
-    double findPeakPosOxygen(TH1 *h);
+    double findPeakPosFerrum847Approx(TH1 *h, const double A);
+    double findPeakPosFerrum847(TH1 *h, const double A);
+    double findPeakPosFerrum1238(TH1 *h, const double A);
+    double findPeakPosHydrogen(TH1 *h, const double A);
+    double findPeakPosCarbon(TH1 *h, const double A);
+    double findPeakPosOxygen(TH1 *h, const double A);
 
 };
 

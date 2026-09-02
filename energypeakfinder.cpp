@@ -18,11 +18,12 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
     fCalib_->SetParameter(2, 0.0);
 
     findPeakPosFunctions_ = {
-        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc); }},
-        {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc); }},
-        {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc); }},
-        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *) { return findPeakPosCarbon(hist); }},
-        {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *) { return findPeakPosOxygen(hist); }},
+        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.3); }},
+        {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.35); }},
+        {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.3); }},
+        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *histRc) { return findPeakPosCarbon(hist, 1.3); }},
+        {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *histRc) { return findPeakPosOxygen(hist, 1.3); }},
+
     };
 }
 
@@ -43,12 +44,9 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     std::vector<EnergyPeak> peaks{
                 EnergyPeak{EnergyPeak::Id::FE847, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
-                EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
-//                EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
-               EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
-//                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
-               EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
-//                EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
+//                EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
+                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
+                EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
     };
 
     auto fe847PosApprox{getFerrum847PosApprox(histRc)};
@@ -101,128 +99,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     //     peaks.at(i).setChannel(peakPos);
     // }
 
-//    for (auto i{0}; i < graphPolN.GetN(); i++) {
-//        std::cout << i << " " << graphPolN.GetPointX(i) << " " << graphPolN.GetPointY(i) << std::endl;
-//    }
-
-//    std::map<EnergyPeak::Id, size_t> peaksIdx;
-//    for (size_t i{0}; i < peaks.size(); i++) {
-//        peaksIdx[peaks.at(i).id()] = i;
-//    }
-
-
-
-
-//    std::map<EnergyPeak::Id, std::function<double(TH1 *)>> peaksFunc{
-//        {EnergyPeak::Id::FE847, [&](TH1 *h) { return getFerrum847Pos(h); }},
-//    };
-
-
-
-//    auto fe847PosApprox{getFerrum847PosApprox(histRc)};
-
-//    offset_ = 0.0;
-//    calib_ = (peaks.at(peaksIdx.find(EnergyPeak::Id::FE847)->second).energy()) / fe847PosApprox;
-//    fCalib_->SetParameter(1, (peaks.at(peaksIdx.find(EnergyPeak::Id::FE847)->second).energy()) / fe847PosApprox);
-
-//    TGraphErrors graphPolN(peaks.size());
-//    //
-//    peaks[peaksIdx.find(EnergyPeak::Id::FE847)->second].setChannel(getFerrum847Pos(histRc));
-//    graphPolN.SetPoint(
-//                peaksIdx.find(EnergyPeak::Id::FE847)->second,
-//                peaks[peaksIdx.find(EnergyPeak::Id::FE847)->second].channel(),
-//                peaks[peaksIdx.find(EnergyPeak::Id::FE847)->second].energy()
-//    );
-//    calib_  = (peaks[peaksIdx.find(EnergyPeak::Id::FE847)->second].energy() - offset_)
-//            / peaks[peaksIdx.find(EnergyPeak::Id::FE847)->second].channel();
-
-//    //
-//    peaks[peaksIdx.find(EnergyPeak::Id::FE1238)->second].setChannel(getFerrum1238Pos(histRc));
-//    graphPolN.SetPoint(
-//                peaksIdx.find(EnergyPeak::Id::FE1238)->second,
-//                peaks[peaksIdx.find(EnergyPeak::Id::FE1238)->second].channel(),
-//                peaks[peaksIdx.find(EnergyPeak::Id::FE1238)->second].energy()
-//    );
-//    TF1 fPol1("fPol1", "pol1", 0.0, 8.0e3);
-//    graphPolN.Fit(&fPol1, "RQ0");
-//    offset_ = fPol1.GetParameter(0);
-//    calib_ = fPol1.GetParameter(1);
-
-//    //
-//    peaks[peaksIdx.find(EnergyPeak::Id::HYDROGEN)->second].setChannel(getHydrogenPos(histRc));
-//    graphPolN.SetPoint(
-//                peaksIdx.find(EnergyPeak::Id::HYDROGEN)->second,
-//                peaks[peaksIdx.find(EnergyPeak::Id::HYDROGEN)->second].channel(),
-//                peaks[peaksIdx.find(EnergyPeak::Id::HYDROGEN)->second].energy()
-//    );
-//    graphPolN.Fit(&fPol1, "RQ0");
-//    offset_ = fPol1.GetParameter(0);
-//    calib_ = fPol1.GetParameter(1);
-//    TF1 fPol2("fPol2", "pol2", 0.0, 8.0e3);
-//    graphPolN.Fit(&fPol2, "RQ0");
-
-//    //
-//    peaks[peaksIdx.find(EnergyPeak::Id::CARBON)->second].setChannel(
-//                getCarbonPos(hist, fPol2.GetX(peaks[peaksIdx.find(EnergyPeak::Id::CARBON)->second].energy()))
-//    );
-//    graphPolN.SetPoint(
-//                peaksIdx.find(EnergyPeak::Id::CARBON)->second,
-//                peaks[peaksIdx.find(EnergyPeak::Id::CARBON)->second].channel(),
-//                peaks[peaksIdx.find(EnergyPeak::Id::CARBON)->second].energy()
-//    );
-//    graphPolN.Fit(&fPol1, "RQ0");
-//    offset_ = fPol1.GetParameter(0);
-//    calib_ = fPol1.GetParameter(1);
-//    graphPolN.Fit(&fPol2, "RQ0");
-
-    //
-//    peaks[peaksIdx.find(EnergyPeak::Id::OXYGEN)->second].setChannel(
-//                getOxygenPos(hist, fPol2.GetX(peaks[peaksIdx.find(EnergyPeak::Id::OXYGEN)->second].energy()))
-//    );
-//    graphPolN.SetPoint(
-//                peaksIdx.find(EnergyPeak::Id::OXYGEN)->second,
-//                peaks[peaksIdx.find(EnergyPeak::Id::OXYGEN)->second].channel(),
-//                peaks[peaksIdx.find(EnergyPeak::Id::OXYGEN)->second].energy()
-//    );
-//    graphPolN.Fit(&fPol1, "RQ0");
-//    offset_ = fPol1.GetParameter(0);
-//    calib_ = fPol1.GetParameter(1);
-//    graphPolN.Fit(&fPol2, "RQ0");
-
-//    //
-//    peaks[peaksIdx.find(EnergyPeak::Id::FE7631)->second].setChannel(
-//                getFerrum7631Pos(histRc, fPol2.GetX(peaks[peaksIdx.find(EnergyPeak::Id::FE7631)->second].energy()))
-//    );
-//    graphPolN.SetPoint(
-//                peaksIdx.find(EnergyPeak::Id::FE7631)->second,
-//                peaks[peaksIdx.find(EnergyPeak::Id::FE7631)->second].channel(),
-//                peaks[peaksIdx.find(EnergyPeak::Id::FE7631)->second].energy()
-//    );
-//    graphPolN.Fit(&fPol1, "RQ0");
-//    offset_ = fPol1.GetParameter(0);
-//    calib_ = fPol1.GetParameter(1);
-//    graphPolN.Fit(&fPol2, "RQ0");
-
     energyPeaks_ = std::move(peaks);
-
-//    auto hydPos{getHydrogenPos(histRc)};
-//    energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::HYDROGEN, hydPos));
-//    graphPolN.SetPoint(2, hydPos, 2223.0);
-//    calib_  = (2223.0 - offset_) / hydPos;
-//    TF1 fApp1("fApp1", "pol1", 0.0, 8.0e3);
-//    TF1 fApp("fApp", "pol2", 0.0, 8.0e3);
-//    graphPolN.Fit(&fApp, "RQ0");
-//    auto carbonPos{getCarbonPos(hist, fApp.GetX(4438.0))};
-//    energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::CARBON, carbonPos));
-//    graphPolN.SetPoint(2, carbonPos, 4438.0);
-//    calib_  = (4438.0 - offset_) / carbonPos;
-//    graphPolN.Fit(&fApp, "RQ0");
-//    auto oxygenPos{getOxygenPos(hist, fApp.GetX(6129.0))};
-//    energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::OXYGEN, oxygenPos));
-//    graphPolN.SetPoint(3, oxygenPos, 6129.0);
-//    calib_  = (6129.0 - offset_) / oxygenPos;
-//    auto fe7631Pos{getFerrum7631Pos(histRc, 0.0)};
-//    energyPeaks_.push_back(EnergyPeak(EnergyPeak::Id::FE7631, fe7631Pos));
 }
 
 void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
@@ -261,7 +138,7 @@ double EnergyPeakFinder::getFerrum847PosApprox(TH1 *h)
 
 }
 
-double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h)
+double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h, const double A)
 {
     double peakEnergy{EnergyPeak::energyById(EnergyPeak::Id::FE847)};
     double pos{fCalib_->GetX(peakEnergy)};
@@ -279,7 +156,7 @@ double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h)
 
     TF1 f("f", "gaus(0) + pol1(3)", xL, xR);
     // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
+    double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
     f.SetParameter(0, y(h, pos) - yR);
@@ -288,9 +165,10 @@ double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h)
     f.SetParameter(3, p0);
     f.SetParameter(4, p1);
 
-    f.SetParLimits(0, 0.0, y(h, pos) - yR);
+    f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
+    f.SetParLimits(4, -1.0e7, 0.0);
     h->Fit("f", "RQN0");
 
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
@@ -306,17 +184,21 @@ double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h)
     TLine *l{new TLine(pos, 0.0, pos, h->GetMaximum())};
     h->GetListOfFunctions()->Add(l);
 
+    TLine *lPrev{new TLine(xL, yL, xR, yR)};
+    lPrev->SetLineColor(kMagenta);
+    h->GetListOfFunctions()->Add(lPrev);
+
     return f.GetParameter(1);
 }
 
-double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h)
+double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
 {
     double peakEnergy{EnergyPeak::energyById(EnergyPeak::Id::FE1238)};
     double pos{fCalib_->GetX(peakEnergy)};
     double sigma{fCalib_->GetX(TMath::Sqrt(peakEnergy) * A)};
 
     double xL{pos - 3.0 * sigma};
-    double xR{pos + 3.0 * sigma};
+    double xR{pos + 3.5 * sigma};
 
     auto y = [](const TH1 *h, const double &x){
         return h->GetBinContent(h->GetXaxis()->FindBin(x));
@@ -327,7 +209,7 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h)
 
     TF1 f("f", "gaus(0) + pol1(3)", xL, xR);
     // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
+    double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
     f.SetParameter(0, y(h, pos) - yR);
@@ -336,10 +218,15 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h)
     f.SetParameter(3, p0);
     f.SetParameter(4, p1);
 
-    f.SetParLimits(0, 0.0, y(h, pos) - yR);
+
+
+    f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
+    f.SetParLimits(4, -1.0e7, 0.0);
     h->Fit("f", "RQN0");
+
+    std::cout << h->GetName() << " " << p1 << " " << f.GetParameter(4) << std::endl;
 
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
     fP->SetLineColor(kOrange);
@@ -354,10 +241,14 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h)
     TLine *l{new TLine(pos, 0.0, pos, h->GetMaximum())};
     h->GetListOfFunctions()->Add(l);
 
+    TLine *lPrev{new TLine(xL, yL, xR, yR)};
+    lPrev->SetLineColor(kMagenta);
+    h->GetListOfFunctions()->Add(lPrev);
+
     return f.GetParameter(1);
 }
 
-double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h)
+double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
 {
     double peakEnergyAdd{EnergyPeak::energyById(EnergyPeak::Id::HYDROGENADD)};
     double posAdd{fCalib_->GetX(peakEnergyAdd)};
@@ -395,7 +286,7 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h)
 
     TF1 f("f", ff, xL, xR, 6);
     // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
+    double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
     f.SetParameter(0, y(h, pos) - yR);
@@ -405,6 +296,7 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h)
     f.SetParameter(4, p0);
     f.SetParameter(5, p1);
 
+    f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
     f.SetParLimits(3, 0.05, 0.15);
@@ -450,14 +342,14 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h)
     return f.GetParameter(1);
 }
 
-double EnergyPeakFinder::findPeakPosCarbon(TH1 *h)
+double EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
 {
     double peakEnergy{EnergyPeak::energyById(EnergyPeak::Id::CARBON)};
     double pos{fCalib_->GetX(peakEnergy)};
     double sigma{2 * fCalib_->GetX(TMath::Sqrt(peakEnergy) * A)};
 
     double xL{pos - 3.0 * sigma};
-    double xR{pos + 6.0 * sigma};
+    double xR{pos + 3.0 * sigma};
 
     auto y = [](const TH1 *h, const double &x){
         return h->GetBinContent(h->GetXaxis()->FindBin(x));
@@ -468,7 +360,7 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h)
 
     TF1 f("f", "gaus(0) + pol1(3)", xL, xR);
     // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
+    double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
     f.SetParameter(0, y(h, pos) - yR);
@@ -477,7 +369,7 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h)
     f.SetParameter(3, p0);
     f.SetParameter(4, p1);
 
-//    f.SetParLimits(0, 0.0, y(h, pos) - yR);
+    f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.25 * sigma, 1.75 * sigma);
     h->Fit("f","RQN0");
@@ -498,7 +390,7 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h)
     return f.GetParameter(1);
 }
 
-double EnergyPeakFinder::findPeakPosOxygen(TH1 *h)
+double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
 {
     double peakEnergyAdd{EnergyPeak::energyById(EnergyPeak::Id::OXYGENADD)};
     double posAdd{fCalib_->GetX(peakEnergyAdd)};
@@ -537,7 +429,7 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h)
 
     TF1 f("f", ff, xL, xR, 6);
     // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
+    double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
     // f.SetParameter(0, y(h, pos) - yR);
@@ -547,10 +439,10 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h)
     f.SetParameter(4, p0);
     f.SetParameter(5, p1);
 
-//    f.SetParLimits(0, 0.0, y(h, pos) - yR);
+    f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
-   f.SetParLimits(3, 0.25, 0.75);
+    f.SetParLimits(3, 0.25, 0.75);
     h->Fit("f","RQN0");
 
     TF1 *fP{new TF1("fP", ff, xL, xR, 6)};
@@ -570,448 +462,6 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h)
     h->GetListOfFunctions()->Add(lAdd);
 
     return f.GetParameter(1);
-}
-
-double EnergyPeakFinder::getFerrum847PosApprox(TH1 *h, double r)
-{
-
-    double feLow=h->GetXaxis()->GetBinCenter(h->GetMaximumBin()), dfeLow=35, dfeHigh=50, dfeLow2=35, dfeHigh2=50;//rea
-    TF1 f("f","gaus(0)+pol1(3)", feLow-dfeLow, feLow+dfeHigh);
-    double p0, p1;
-    p1 = (h->GetBinContent(h->GetXaxis()->FindBin(feLow+dfeHigh))-h->GetBinContent(h->GetXaxis()->FindBin(feLow-dfeLow)))
-            /((feLow+dfeHigh)-(feLow-dfeLow));
-    p0 = h->GetBinContent(h->GetXaxis()->FindBin(feLow+dfeHigh))-p1*(feLow+dfeHigh);
-        f.SetParameters(h->GetMaximum() - h->GetBinContent(h->GetXaxis()->FindBin(feLow+dfeHigh)),
-    feLow,h->GetBinCenter(h->GetXaxis()->FindBin(feLow+dfeHigh)) - h->GetBinCenter(h->GetXaxis()->FindBin(feLow-dfeLow)),p0,p1);
-
-    f.SetParLimits(0, 0, h->GetMaximum() - h->GetBinContent(h->GetXaxis()->FindBin(feLow+dfeHigh)));
-    f.SetParLimits(1,feLow-dfeLow,feLow+dfeHigh);
-    f.SetParLimits(2,0.,h->GetBinCenter(h->GetXaxis()->FindBin(feLow+dfeHigh)) - h->GetBinCenter(h->GetXaxis()->FindBin(feLow-dfeLow)));
-    h->Fit("f","RQN0");
-    return f.GetParameter(1);
-
-}
-
-//double PeakFinder::getFerrum847PosApprox(TH1 *h, double r)
-//{
-//    double pos{h->GetXaxis()->GetBinCenter(h->GetMaximumBin())};
-//    double dL{pos * r / 2.35 * 3.0};
-//    double dR{pos * r / 2.35 * 4.0};
-//    double p1{h->GetBinContent(h->GetXaxis()->FindBin(pos + dR)) - h->GetBinContent(h->GetXaxis()->FindBin(pos - dL))};
-//    double p0{h->GetBinContent(h->GetXaxis()->FindBin(pos + dR)) - p1 * (pos + dR)};
-
-//    TF1 f("f","gaus(0) + pol1(3)", pos - dL, pos + dR);
-//    f.SetParameters(h->GetMaximum() - h->GetBinContent(h->GetXaxis()->FindBin(pos + dR)), pos, r / 2.35 * pos, p0, p1);
-//    f.SetParLimits(0, 0, h->GetMaximum() - h->GetBinContent(h->GetXaxis()->FindBin(pos + dR)));
-//    f.SetParLimits(1, pos - dL, pos + dR);
-//    f.SetParLimits(2, 0.0, h->GetBinCenter(h->GetXaxis()->FindBin(pos + dR)) - h->GetBinCenter(h->GetXaxis()->FindBin(pos - dL)));
-//    h->Fit(&f,"RQ");
-
-//    return f.GetParameter(1);
-//}
-
-double EnergyPeakFinder::getFerrum847Pos(TH1 *h)
-{
-//    double pos{h->GetXaxis()->GetBinCenter(h->GetMaximumBin())};
-    auto peak{EnergyPeak(EnergyPeak::Id::FE847, 0.0)};
-    double pos{fCalib_->GetX(peak.energy())};
-    peak.setChannel(pos);
-    double sigma{fCalib_->GetX(TMath::Sqrt(peak.energy()) * A)};
-
-    double xL{pos - 3.0 * sigma};
-    double xR{pos + 3.0 * sigma};
-
-    auto y = [](const TH1 *h, const double &x){
-        return h->GetBinContent(h->GetXaxis()->FindBin(x));
-    };
-
-    double yL{y(h, xL)};
-    double yR{y(h, xR)};
-
-    TF1 f("f", "gaus(0) + pol1(3)", xL, xR);
-    // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
-    double p0{yR - p1 * xR};
-
-    f.SetParameter(0, y(h, pos) - yR);
-    f.SetParameter(1, pos);
-    f.SetParameter(2, sigma);
-    f.SetParameter(3, p0);
-    f.SetParameter(4, p1);
-
-    f.SetParLimits(0, 0.0, y(h, pos) - yR);
-    f.SetParLimits(1, xL, xR);
-    f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
-    h->Fit("f","RQN0");
-
-    TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
-    fP->SetLineColor(kOrange);
-    fP->SetParameters(f.GetParameters());
-    h->GetListOfFunctions()->Add(fP);
-    TF1 *fBg{new TF1("fBg", "pol1(0)", xL, xR)};
-    fBg->SetLineColor(kGreen);
-    fBg->SetParameters(f.GetParameters() + 3);
-    h->GetListOfFunctions()->Add(fP);
-    h->GetListOfFunctions()->Add(fBg);
-
-    return f.GetParameter(1);
-}
-
-// old
-
-//double EnergyPeakFinder::getFerrum847Pos(TH1 *h)
-//{
-//    double feLow=847, dfeLow=100, dfeHigh=175;//rea
-//    TF1 f("f","gaus(0) + pol1(3)", getCh(feLow-dfeLow), getCh(feLow+dfeHigh));
-//    double p0, p1;
-//    p1 = (h->GetBinContent(h->GetXaxis()->FindBin(getCh(feLow+dfeHigh)))-h->GetBinContent(h->GetXaxis()->FindBin(getCh(feLow-dfeLow))))
-//            /(getCh(feLow+dfeHigh)-getCh(feLow-dfeLow));
-//    p0 = h->GetBinContent(h->GetXaxis()->FindBin(getCh(feLow+dfeHigh)))-p1*getCh(feLow+dfeHigh);
-//    f.SetParameters(1000,getCh(847),getdCh(40),p0,p1); //ryn
-//    f.SetParLimits(0, 0, 1.0e6);
-//    f.SetParLimits(1,getCh(800),getCh(900));
-//    f.SetParLimits(2,getdCh(20.),getdCh(60.));
-//    f.SetParLimits(4,p1,0);
-//    h->Fit(&f,"RQN0");
-
-//    TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", getCh(feLow - dfeLow), getCh(feLow + dfeHigh))};
-//    fP->SetLineColor(kRed);
-//    fP->SetParameters(f.GetParameters());
-//    h->GetListOfFunctions()->Add(fP);
-//    TF1 *fBg{new TF1("fBg", "pol1(0)", getCh(feLow - dfeLow), getCh(feLow + dfeHigh))};
-//    fBg->SetLineColor(kGreen);
-//    fBg->SetParameters(f.GetParameters() + 3);
-//    h->GetListOfFunctions()->Add(fP);
-//    h->GetListOfFunctions()->Add(fBg);
-
-//    return f.GetParameter(1);
-//}
-
-double EnergyPeakFinder::getFerrum1238Pos(TH1 *h)
-{
-    double pos{getCh(1238.0)};
-    auto peak{EnergyPeak(EnergyPeak::Id::FE1238, pos)};
-    double sigma{getCh(TMath::Sqrt(peak.energy()) * A)};
-
-    double xL{pos - 3.0 * sigma};
-    double xR{pos + 3.0 * sigma};
-
-    auto y = [](const TH1 *h, const double &x){
-        return h->GetBinContent(h->GetXaxis()->FindBin(x));
-    };
-
-    double yL{y(h, xL)};
-    double yR{y(h, xR)};
-
-    TF1 f("f", "gaus(0) + pol1(3)", xL, xR);
-    // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
-    double p0{yR - p1 * xR};
-
-    f.SetParameter(0, y(h, pos) - yR);
-    f.SetParameter(1, pos);
-    f.SetParameter(2, sigma);
-    f.SetParameter(3, p0);
-    f.SetParameter(4, p1);
-
-    f.SetParLimits(0, 0.0, y(h, pos) - yR);
-    f.SetParLimits(1, xL, xR);
-    f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
-    h->Fit("f","RQN0");
-
-    TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
-    fP->SetLineColor(kOrange);
-    fP->SetParameters(f.GetParameters());
-    h->GetListOfFunctions()->Add(fP);
-    TF1 *fBg{new TF1("fBg", "pol1(0)", xL, xR)};
-    fBg->SetLineColor(kGreen);
-    fBg->SetParameters(f.GetParameters() + 3);
-    h->GetListOfFunctions()->Add(fP);
-    h->GetListOfFunctions()->Add(fBg);
-
-    return f.GetParameter(1);
-
-}
-
-double EnergyPeakFinder::getHydrogenPos(TH1 *h)
-{
-    double posAdd{getCh(2100.0)};
-    auto peakAdd{EnergyPeak(EnergyPeak::Id::HYDROGEN, posAdd)};
-    double sigmaAdd{getCh(TMath::Sqrt(peakAdd.energy() - 123.0) * A)};
-
-    double pos{getCh(2223.0)};
-    auto peak{EnergyPeak(EnergyPeak::Id::HYDROGEN, pos)};
-    double sigma{getCh(TMath::Sqrt(peak.energy()) * A)};
-
-    double xL{posAdd - 3.0 * sigmaAdd};
-    double xR{pos + 3.0 * sigma};
-
-    auto y = [](const TH1 *h, const double &x){
-        return h->GetBinContent(h->GetXaxis()->FindBin(x));
-    };
-
-    double yL{y(h, xL)};
-    double yR{y(h, xR)};
-
-    auto ff = [&](double *x, double *par){
-        double arg_1{0.0}, arg_2{0.0};
-        if (par[2] != 0.0)
-        {
-            arg_1 = ( x[0] - par[1] ) / par[2];
-            arg_2 = ( x[0] - par[1] + getdCh(2223.0 - 2100.0)) / par[2];
-
-        }
-        double fitval{
-            par[0] * TMath::Exp(-0.5 * arg_1 * arg_1) +
-            par[0] * par[3] * TMath::Exp(-0.5 * arg_2 * arg_2) +
-            par[4] + par[5] * x[0]
-        };
-
-        return fitval;
-    };
-
-    TF1 f("f", ff, xL, xR, 6);
-    // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
-    double p0{yR - p1 * xR};
-
-    f.SetParameter(0, y(h, pos) - yR);
-    f.SetParameter(1, pos);
-    f.SetParameter(2, sigma);
-    f.SetParameter(3, 0.1);
-    f.SetParameter(4, p0);
-    f.SetParameter(5, p1);
-
-    f.SetParLimits(0, 0.0, y(h, pos) - yR);
-    f.SetParLimits(1, xL, xR);
-    f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
-    f.SetParLimits(3, 0.05, 0.15);
-    h->Fit("f","RQN0");
-
-    TF1 *fP{new TF1("fP", ff, xL, xR, 6)};
-    fP->SetLineColor(kOrange);
-    fP->SetParameters(f.GetParameters());
-    h->GetListOfFunctions()->Add(fP);
-    TF1 *fBg{new TF1("fBg", "pol1(0)", xL, xR)};
-    fBg->SetLineColor(kGreen);
-    fBg->SetParameters(f.GetParameters() + 4);
-    h->GetListOfFunctions()->Add(fP);
-    h->GetListOfFunctions()->Add(fBg);
-
-    return f.GetParameter(1);
-
-
-//    double posE{2223}, dLe{220}, dRe{210};
-
-//    TF1 f("f","gaus(0)+pol1(3)", getCh(posE-dLe), getCh(posE+dRe));
-//    f.SetParameters(1000,getCh(posE),getdCh(80),1000,0);
-//    f.SetParLimits(0,0,1.0e5);
-//    f.SetParLimits(1,getCh(posE-220),getCh(posE+210));
-//    f.SetParLimits(2,getdCh(50.),getdCh(120.));
-//    h->Fit(&f,"RQN0");
-
-
-
-
-
-//    TF1 f1("f1", ff, f.GetParameter(1) - getdCh(dLe), f.GetParameter(1) + getdCh(dRe), 6);
-
-//    f1.SetParameter(0,f.GetParameter(0));
-//    f1.SetParameter(1,f.GetParameter(1));
-//    f1.SetParameter(2,f.GetParameter(2));
-//    f1.SetParameter(3,0.1);
-//    f1.SetParameter(4,f.GetParameter(3));
-//    f1.SetParameter(5,f.GetParameter(4));
-//    f1.SetParLimits(0,0,1.0e5);
-//    f1.SetParLimits(1,f.GetParameter(1)-getdCh(dLe),f.GetParameter(1)+getdCh(dRe));
-//    f1.SetParLimits(2,getdCh(40.),getdCh(100.));
-//    f1.SetParLimits(3,0.01,0.2);
-//    f1.SetParLimits(4,0.,1.0e5);
-//    f1.SetParLimits(5,-100.,0.);
-//    h->Fit(&f1,"RQN0");
-
-//    TF1 *fP{new TF1("fP", ff, f.GetParameter(1) - getdCh(dLe), f.GetParameter(1) + getdCh(dRe), 6)};
-//    fP->SetLineColor(kRed);
-//    fP->SetParameters(f1.GetParameters());
-//    h->GetListOfFunctions()->Add(fP);
-//    TF1 *fBg{new TF1("fBg", "pol1(0)", f.GetParameter(1) - getdCh(dLe), f.GetParameter(1) + getdCh(dRe))};
-//    fBg->SetLineColor(kGreen);
-//    fBg->SetParameters(f1.GetParameters() + 4);
-//    h->GetListOfFunctions()->Add(fP);
-//    h->GetListOfFunctions()->Add(fBg);
-
-//    return f1.GetParameter(1);
-}
-
-//double EnergyPeakFinder::getHydrogenPos(TH1 *h)
-//{
-
-//    double posE{2223}, dLe{220}, dRe{210};
-
-//    TF1 f("f","gaus(0)+pol1(3)", getCh(posE-dLe), getCh(posE+dRe));
-//    f.SetParameters(1000,getCh(posE),getdCh(80),1000,0);
-//    f.SetParLimits(0,0,1.0e5);
-//    f.SetParLimits(1,getCh(posE-220),getCh(posE+210));
-//    f.SetParLimits(2,getdCh(50.),getdCh(120.));
-//    h->Fit(&f,"RQN0");
-
-
-//    auto ff = [&](double *x, double *par){
-//        double arg_1{0.0}, arg_2{0.0};
-//        if (par[2] != 0.0)
-//        {
-//            arg_1 = ( x[0] - par[1] ) / par[2];
-//            arg_2 = ( x[0] - par[1] + getdCh(2223.0 - 2100.0)) / par[2];
-
-//        }
-//        double fitval{
-//            par[0] * TMath::Exp(-0.5 * arg_1 * arg_1)+
-//            par[0] * par[3] * TMath::Exp(-0.5 * arg_2 * arg_2)+
-//            par[4] + par[5] * x[0]
-//        };
-
-//        return fitval;
-//    };
-
-
-//    TF1 f1("f1", ff, f.GetParameter(1) - getdCh(dLe), f.GetParameter(1) + getdCh(dRe), 6);
-
-//    f1.SetParameter(0,f.GetParameter(0));
-//    f1.SetParameter(1,f.GetParameter(1));
-//    f1.SetParameter(2,f.GetParameter(2));
-//    f1.SetParameter(3,0.1);
-//    f1.SetParameter(4,f.GetParameter(3));
-//    f1.SetParameter(5,f.GetParameter(4));
-//    f1.SetParLimits(0,0,1.0e5);
-//    f1.SetParLimits(1,f.GetParameter(1)-getdCh(dLe),f.GetParameter(1)+getdCh(dRe));
-//    f1.SetParLimits(2,getdCh(40.),getdCh(100.));
-//    f1.SetParLimits(3,0.01,0.2);
-//    f1.SetParLimits(4,0.,1.0e5);
-//    f1.SetParLimits(5,-100.,0.);
-//    h->Fit(&f1,"RQN0");
-
-//    TF1 *fP{new TF1("fP", ff, f.GetParameter(1) - getdCh(dLe), f.GetParameter(1) + getdCh(dRe), 6)};
-//    fP->SetLineColor(kRed);
-//    fP->SetParameters(f1.GetParameters());
-//    h->GetListOfFunctions()->Add(fP);
-//    TF1 *fBg{new TF1("fBg", "pol1(0)", f.GetParameter(1) - getdCh(dLe), f.GetParameter(1) + getdCh(dRe))};
-//    fBg->SetLineColor(kGreen);
-//    fBg->SetParameters(f1.GetParameters() + 4);
-//    h->GetListOfFunctions()->Add(fP);
-//    h->GetListOfFunctions()->Add(fBg);
-
-//    return f1.GetParameter(1);
-//}
-
-
-double EnergyPeakFinder::getCarbonPos(TH1 *h, double appPos)
-{
-    double pos{appPos};
-    auto peak{EnergyPeak(EnergyPeak::Id::CARBON, pos)};
-    double sigma{getCh(TMath::Sqrt(peak.energy()) * A)};
-
-    double xL{pos - 3.0 * sigma};
-    double xR{pos + 3.0 * sigma};
-
-    auto y = [](const TH1 *h, const double &x){
-        return h->GetBinContent(h->GetXaxis()->FindBin(x));
-    };
-
-    double yL{y(h, xL)};
-    double yR{y(h, xR)};
-
-    TF1 f("f", "gaus(0) + pol1(3)", xL, xR);
-    // y = p0 + p1 * x
-    double p1{(yR - yL) / (xR - yR)};
-    double p0{yR - p1 * xR};
-
-    f.SetParameter(0, y(h, pos) - yR);
-    f.SetParameter(1, pos);
-    f.SetParameter(2, sigma);
-    f.SetParameter(3, p0);
-    f.SetParameter(4, p1);
-
-    f.SetParLimits(0, 0.0, y(h, pos) - yR);
-    f.SetParLimits(1, xL, xR);
-    f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
-    h->Fit("f","RQN0");
-
-    TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
-    fP->SetLineColor(kOrange);
-    fP->SetParameters(f.GetParameters());
-    h->GetListOfFunctions()->Add(fP);
-    TF1 *fBg{new TF1("fBg", "pol1(0)", xL, xR)};
-    fBg->SetLineColor(kGreen);
-    fBg->SetParameters(f.GetParameters() + 3);
-    h->GetListOfFunctions()->Add(fP);
-    h->GetListOfFunctions()->Add(fBg);
-
-    return f.GetParameter(1);
-
-//    double pos{appPos};
-//    double dL{80};
-////    double dR{150};
-//    TF1 f("f", "gaus(0) + pol1(3)", pos - dL, pos + dL);
-//    double amp{h->GetBinContent(h->GetXaxis()->FindBin(pos)) - h->GetBinContent(h->GetXaxis()->FindBin(pos + dL))};
-
-//    f.SetParameters(amp, pos, dL * 0.25, 0.0, 0.0, 0.0);
-//    f.SetParLimits(0, 0.0, 1.0e5);
-//    f.SetParLimits(1, pos - dL * 0.5, pos + dL * 0.5);
-//    f.SetParLimits(2, dL * 0.05, dL);
-//    f.SetParLimits(3, 0.0, h->GetBinContent(h->GetXaxis()->FindBin(pos)));
-//    f.SetParLimits(4, 0.0, -1.0 * DBL_MAX);
-//    h->Fit(&f, "RQN0");
-
-////    TLine *l{new TLine(pos, 0.0, pos, amp)};
-
-//    TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", pos - dL, pos + dL)};
-//    fP->SetLineColor(kRed);
-//    fP->SetParameters(f.GetParameters());
-//    h->GetListOfFunctions()->Add(fP);
-//    TF1 *fBg{new TF1("fBg", "pol1(0)", pos - dL, pos + dL)};
-//    fBg->SetLineColor(kGreen);
-//    fBg->SetParameters(f.GetParameters() + 3);
-//    h->GetListOfFunctions()->Add(fP);
-//    h->GetListOfFunctions()->Add(fBg);
-////    h->GetListOfFunctions()->Add(l);
-
-//    return f.GetParameter(1);
-}
-
-double EnergyPeakFinder::getOxygenPos(TH1 *h, double appPos)
-{
-    double pos{appPos};
-    double dL{350.0};
-    double dR{200.0};
-    double p1 = (h->GetBinContent(h->GetXaxis()->FindBin(pos + dR)) - h->GetBinContent(h->GetXaxis()->FindBin(pos - dL)))
-            / (dR + dL);
-    double p0{h->GetBinContent(h->GetXaxis()->FindBin(pos + dR)) - p1 * pos};
-
-    TF1 fOxy("fOxy","gaus(0) + gaus(3) + pol1(6)", pos - dL, pos + dR);
-    fOxy.SetParameters(1000, pos - getdCh(500), getdCh(80), 3000, pos, getdCh(80), p0, p1);
-    fOxy.SetParameter(0, h->GetBinContent(h->GetXaxis()->FindBin(fOxy.GetParameter(1))));
-    fOxy.SetParameter(3, h->GetBinContent(h->GetXaxis()->FindBin(fOxy.GetParameter(3))));
-    fOxy.SetParLimits(0, 0.0, 1.0e5);
-    fOxy.SetParLimits(1, getCh(5350.0), getCh(5800.0));
-    fOxy.SetParLimits(2, getdCh(50.0), getdCh(120.0));
-    fOxy.SetParLimits(3, 0, 1.0e5);
-    fOxy.SetParLimits(4, getCh(5900.0), getCh(6450.0));
-    fOxy.SetParLimits(5, getdCh(50.0), getdCh(120.0));
-    h->Fit("fOxy","RQN0");
-    fOxy.SetRange(fOxy.GetParameter(1) - 3.0 * fOxy.GetParameter(2), fOxy.GetParameter(4) + 3.0 * fOxy.GetParameter(5));
-    h->Fit("fOxy","RQN0");
-
-    TF1 *fP{new TF1("fP", "gaus(0) + gaus(3) + pol1(6)", fOxy.GetParameter(1) - 3.0 * fOxy.GetParameter(2), fOxy.GetParameter(4) + 3.0 * fOxy.GetParameter(5))};
-    fP->SetLineColor(kRed);
-    fP->SetParameters(fOxy.GetParameters());
-    h->GetListOfFunctions()->Add(fP);
-    TF1 *fBg{new TF1("fBg", "pol1(0)", fOxy.GetParameter(1) - 3.0 * fOxy.GetParameter(2), fOxy.GetParameter(4) + 3.0 * fOxy.GetParameter(5))};
-    fBg->SetLineColor(kGreen);
-    fBg->SetParameters(fOxy.GetParameters() + 6);
-    h->GetListOfFunctions()->Add(fP);
-    h->GetListOfFunctions()->Add(fBg);
-
-    return fOxy.GetParameter(4);
 }
 
 double EnergyPeakFinder::getFerrum7631Pos(TH1 *h, double appPos)
