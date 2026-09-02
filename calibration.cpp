@@ -46,9 +46,9 @@ void Calibration::process()
 
     fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
-//    for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-//        energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i), histogramManager_->histsEnergyByGamma().at(i));
-//    }
+   for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+       energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i), histogramManager_->histsEnergyByGamma().at(i));
+   }
     // !
 
 //    ResolutionProcessing rP;
@@ -303,7 +303,6 @@ void Calibration::fillHistsEnergyByGamma(const std::vector<std::vector<TH1D *> >
     }
     for (size_t i{0}; i < histsSg.size(); ++i) {
         for (size_t j{0}; j <  histsSg.at(i).size(); ++j) {
-            histogramManager_->histsEnergyByGamma()[i]->Add(histsSg.at(i).at(j));
             histogramManager_->histsEnergyByGamma()[i]->Add(histsBg.at(i).at(j), -1.0 * 6.0 / 10.0);
             histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j));
             histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j), -1.0 * 6.0 / 10.0);
