@@ -99,6 +99,8 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     //     peaks.at(i).setChannel(peakPos);
     // }
 
+    std::sort(peaks.begin(), peaks.end());
+
     energyPeaks_ = std::move(peaks);
 }
 
@@ -218,8 +220,6 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
     f.SetParameter(3, p0);
     f.SetParameter(4, p1);
 
-
-
     f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
@@ -329,13 +329,15 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
     fP_add->SetParameter(2, f.GetParameter(2));
     fP_add->SetParameter(3, f.GetParameter(4));
     fP_add->SetParameter(4, f.GetParameter(5));
-    fP_add->SetLineColor(kMagenta);
+    fP_add->SetLineColor(kBlue + 1);
 
 
     h->GetListOfFunctions()->Add(fP_primary);
     h->GetListOfFunctions()->Add(fP_add);
 
-
+    TLine *lPrev{new TLine(xL, yL, xR, yR)};
+    lPrev->SetLineColor(kMagenta);
+    h->GetListOfFunctions()->Add(lPrev);
 
     return f.GetParameter(1);
 }
@@ -385,6 +387,10 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
     TLine *l{new TLine(pos, 0.0, pos, h->GetMaximum())};
     h->GetListOfFunctions()->Add(l);
 
+    TLine *lPrev{new TLine(xL, yL, xR, yR)};
+    lPrev->SetLineColor(kMagenta);
+    h->GetListOfFunctions()->Add(lPrev);
+
     return f.GetParameter(1);
 }
 
@@ -399,7 +405,7 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
     double sigma{fCalib_->GetX(TMath::Sqrt(peakEnergy) * A)};
 
     double xL{posAdd - 3.0 * sigmaAdd};
-    double xR{pos + 3.0 * sigma};
+    double xR{pos + 4.0 * sigma};
 
     auto y = [](const TH1 *h, const double &x){
         return h->GetBinContent(h->GetXaxis()->FindBin(x));
@@ -441,6 +447,7 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
     f.SetParLimits(3, 0.25, 0.75);
+//    f.SetParLimits(5, -1.0e7, 0.0);
     h->Fit("f","RQN0");
 
     TF1 *fP{new TF1("fP", ff, xL, xR, 6)};
@@ -458,6 +465,10 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
     lAdd->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(l);
     h->GetListOfFunctions()->Add(lAdd);
+
+    TLine *lPrev{new TLine(xL, yL, xR, yR)};
+    lPrev->SetLineColor(kMagenta);
+    h->GetListOfFunctions()->Add(lPrev);
 
     return f.GetParameter(1);
 }

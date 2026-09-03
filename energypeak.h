@@ -27,6 +27,10 @@ public:
 
     static double energyById(EnergyPeak::Id id);
 
+    bool operator<(const EnergyPeak& other) const {
+        return channel_ < other.channel_;
+    }
+
 private:
     EnergyPeak::Id id_;
     double channel_;
