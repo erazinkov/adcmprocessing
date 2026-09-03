@@ -46,9 +46,9 @@ void Calibration::process()
 
     fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
-   for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-       energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i), histogramManager_->histsEnergyByGamma().at(i));
-   }
+//   for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+//       energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i), histogramManager_->histsEnergyByGamma().at(i));
+//   }
     // !
 
 //    ResolutionProcessing rP;

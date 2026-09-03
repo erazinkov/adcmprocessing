@@ -226,8 +226,6 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
     f.SetParLimits(4, -1.0e7, 0.0);
     h->Fit("f", "RQN0");
 
-    std::cout << h->GetName() << " " << p1 << " " << f.GetParameter(4) << std::endl;
-
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
     fP->SetLineColor(kOrange);
     fP->SetParameters(f.GetParameters());
