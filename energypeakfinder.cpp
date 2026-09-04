@@ -18,11 +18,11 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
     fCalib_->SetParameter(2, 0.0);
 
     findPeakPosFunctions_ = {
-        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.3); }},
-        {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.35); }},
-        {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.3); }},
-        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *histRc) { return findPeakPosCarbon(hist, 1.3); }},
-        {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *histRc) { return findPeakPosOxygen(hist, 1.3); }},
+        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.2); }},
+        {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.2); }},
+        {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.2); }},
+        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *histRc) { return findPeakPosCarbon(hist, 1.2); }},
+        {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *histRc) { return findPeakPosOxygen(hist, 1.2); }},
 
     };
 }
@@ -111,9 +111,9 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
 
     std::vector<EnergyPeak> peaks{
                                   // EnergyPeak{EnergyPeak::Id::FE847, 0.0},
-                                  EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
+                                  // EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
                                   // EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
-                                  // EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
+                                  EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
                                   // EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
                                   };
 
@@ -173,6 +173,12 @@ double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h, const double A)
     f.SetParLimits(4, -1.0e7, 0.0);
     h->Fit("f", "RQN0");
 
+    pos = f.GetParameter(1);
+    xL = pos - 3.0 * sigma;
+    xR = pos + 3.0 * sigma;
+    f.SetRange(xL, xR);
+    h->Fit("f", "RQN0");
+
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
     fP->SetLineColor(kOrange);
     fP->SetParameters(f.GetParameters());
@@ -224,6 +230,12 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
     f.SetParLimits(4, -1.0e7, 0.0);
+    h->Fit("f", "RQN0");
+
+    pos = f.GetParameter(1);
+    xL = pos - 3.0 * sigma;
+    xR = pos + 3.0 * sigma;
+    f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
@@ -301,6 +313,7 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
     h->Fit("f","RQN0");
 
 
+
     TF1 *fP{new TF1("fP", ff, xL, xR, 6)};
     fP->SetLineColor(kOrange);
     fP->SetParameters(f.GetParameters());
@@ -374,6 +387,12 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
     f.SetParLimits(2, 0.25 * sigma, 1.75 * sigma);
     h->Fit("f","RQN0");
 
+    pos = f.GetParameter(1);
+    xL = pos - 3.0 * sigma;
+    xR = pos + 3.0 * sigma;
+    f.SetRange(xL, xR);
+    h->Fit("f", "RQN0");
+
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
     fP->SetLineColor(kOrange);
     fP->SetParameters(f.GetParameters());
@@ -405,7 +424,7 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
     double sigma{fCalib_->GetX(TMath::Sqrt(peakEnergy) * A)};
 
     double xL{posAdd - 3.0 * sigmaAdd};
-    double xR{pos + 4.0 * sigma};
+    double xR{pos + 3.0 * sigma};
 
     auto y = [](const TH1 *h, const double &x){
         return h->GetBinContent(h->GetXaxis()->FindBin(x));
@@ -419,7 +438,7 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
         if (par[2] != 0.0)
         {
             arg_1 = ( x[0] - par[1] ) / par[2];
-            arg_2 = ( x[0] - par[1] + (pos - posAdd)) / par[2];
+            arg_2 = ( x[0] - ( par[1] - (pos - posAdd) ) ) / par[2];
 
         }
         double fitval{
@@ -449,6 +468,13 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
     f.SetParLimits(3, 0.25, 0.75);
 //    f.SetParLimits(5, -1.0e7, 0.0);
     h->Fit("f","RQN0");
+
+    posAdd = f.GetParameter(1) - (pos - posAdd);
+    pos = f.GetParameter(1);
+    xL = posAdd - 3.0 * sigmaAdd;
+    xR = pos + 3.0 * sigma;
+    f.SetRange(xL, xR);
+    h->Fit("f", "RQN0");
 
     TF1 *fP{new TF1("fP", ff, xL, xR, 6)};
     fP->SetLineColor(kOrange);
