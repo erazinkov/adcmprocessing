@@ -21,8 +21,8 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
         {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.2); }},
         {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.2); }},
         {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.2); }},
-        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *histRc) { return findPeakPosCarbon(hist, 1.2); }},
-        {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *histRc) { return findPeakPosOxygen(hist, 1.2); }},
+        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *histRc) { return findPeakPosCarbon(hist, 1.3); }},
+        {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *histRc) { return findPeakPosOxygen(hist, 1.3); }},
 
     };
 }
@@ -114,7 +114,7 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
                                   // EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
                                   // EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                                   EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
-                                  // EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
+                                  EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
                                   };
 
 
