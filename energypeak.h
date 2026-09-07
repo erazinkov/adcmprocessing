@@ -14,7 +14,8 @@ public:
         CARBON,
         OXYGEN,
         OXYGENADD,
-        FE7631
+        FE7631,
+        FE7631ADD
     };
     EnergyPeak(EnergyPeak::Id id, double channel);
     EnergyPeak::Id id() const;

@@ -51,6 +51,8 @@ private:
     double findPeakPosCarbon(TH1 *h, const double A);
     double findPeakPosOxygen(TH1 *h, const double A);
 
+    double findPeakPosFerrum7631(TH1 *h, const double A);
+
 };
 
 #endif // ENERGYPEAKFINDER_H
