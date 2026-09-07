@@ -559,7 +559,7 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
     f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.25 * sigma, 1.75 * sigma);
-    f.SetParLimits(3, 0.25, 1.75);
+//    f.SetParLimits(3, 0.25, 1.75);
 //    f.SetParLimits(5, -1.0e7, 0.0);
     h->Fit("f","RQN0");
 
@@ -568,7 +568,7 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
     xL = posAdd - 4.0 * sigmaAdd;
     xR = pos + 4.0 * sigma;
     f.SetRange(xL, xR);
-    h->Fit("f", "RQN0");
+    h->Fit("f", "RN0");
 
     TF1 *fP{new TF1("fP", ff, xL, xR, 6)};
     fP->SetLineColor(kOrange);
