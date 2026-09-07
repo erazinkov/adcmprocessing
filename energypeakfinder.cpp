@@ -517,8 +517,8 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
     double pos{fCalib_->GetX(peakEnergy)};
     double sigma{fCalib_->GetX(TMath::Sqrt(peakEnergy) * A)};
 
-    double xL{posAdd - 4.0 * sigmaAdd};
-    double xR{pos + 4.0 * sigma};
+    double xL{posAdd - 3.0 * sigmaAdd};
+    double xR{pos + 3.0 * sigma};
 
     auto y = [](const TH1 *h, const double &x){
         return h->GetBinContent(h->GetXaxis()->FindBin(x));
@@ -532,7 +532,7 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
         if (par[2] != 0.0)
         {
             arg_1 = ( x[0] - par[1] ) / par[2];
-            arg_2 = ( x[0] - ( par[1] - (pos - posAdd) ) ) / par[2];
+            arg_2 = ( x[0] - ( par[1] - par[6] ) ) / par[2];
 
         }
         double fitval{
@@ -544,7 +544,7 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
         return fitval;
     };
 
-    TF1 f("f", ff, xL, xR, 6);
+    TF1 f("f", ff, xL, xR, 7);
     // y = p0 + p1 * x
     double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
@@ -556,27 +556,31 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
     f.SetParameter(4, p0);
     f.SetParameter(5, p1);
 
+    f.SetParameter(6, pos - posAdd);
+
     f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.25 * sigma, 1.75 * sigma);
 //    f.SetParLimits(3, 0.25, 1.75);
 //    f.SetParLimits(5, -1.0e7, 0.0);
+    f.SetParLimits(6, 0.75 * (pos - posAdd), 1.25 * (pos - posAdd));
     h->Fit("f","RQN0");
 
-    posAdd = f.GetParameter(1) - (pos - posAdd);
+    posAdd = f.GetParameter(1) - f.GetParameter(6);
     pos = f.GetParameter(1);
-    xL = posAdd - 4.0 * sigmaAdd;
-    xR = pos + 4.0 * sigma;
+    xL = posAdd - 3.0 * sigmaAdd;
+    xR = pos + 3.0 * sigma;
     f.SetRange(xL, xR);
     h->Fit("f", "RN0");
 
-    TF1 *fP{new TF1("fP", ff, xL, xR, 6)};
+    TF1 *fP{new TF1("fP", ff, xL, xR, 7)};
     fP->SetLineColor(kOrange);
     fP->SetParameters(f.GetParameters());
     h->GetListOfFunctions()->Add(fP);
     TF1 *fBg{new TF1("fBg", "pol1(0)", xL, xR)};
     fBg->SetLineColor(kGreen);
-    fBg->SetParameters(f.GetParameters() + 4);
+    fBg->SetParameter(0, f.GetParameter(4));
+    fBg->SetParameter(1, f.GetParameter(5));
     h->GetListOfFunctions()->Add(fP);
     h->GetListOfFunctions()->Add(fBg);
 
