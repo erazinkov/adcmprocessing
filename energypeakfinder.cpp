@@ -45,10 +45,10 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     std::vector<EnergyPeak> peaks{
                 EnergyPeak{EnergyPeak::Id::FE847, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
-//                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
+                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
 //                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
                 EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
-//                EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
+                EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
 //                EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
 
@@ -302,19 +302,19 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
     double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
-    f.SetParameter(0, y(h, pos) - yR);
-    // f.SetParameter(0, 1.0e1);
+//    f.SetParameter(0, y(h, pos) - yR);
+    f.SetParameter(0, 1.0e1);
     f.SetParameter(1, pos);
     f.SetParameter(2, sigma);
     f.SetParameter(3, 0.1);
     f.SetParameter(4, p0);
     f.SetParameter(5, p1);
 
-    // f.SetParLimits(0, 0.0, h->GetMaximum());
+     f.SetParLimits(0, 0.0, h->GetMaximum());
     f.SetParLimits(1, xL, xR);
     f.SetParLimits(2, 0.5 * sigma, 1.5 * sigma);
     f.SetParLimits(3, 0.05, 0.15);
-    f.SetParLimits(4, -1.0e7, 0.0);
+    f.SetParLimits(5, -1.0e7, 0.0);
     h->Fit("f","RQN0");
 
     posAdd = f.GetParameter(1) - (pos - posAdd);
@@ -455,11 +455,11 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
     f.SetParLimits(2, 0.25 * sigma, 1.75 * sigma);
     h->Fit("f","RQN0");
 
-    pos = f.GetParameter(1);
-    xL = pos - 3.0 * sigma;
-    xR = pos + 3.0 * sigma;
-    f.SetRange(xL, xR);
-    h->Fit("f", "RQN0");
+//    pos = f.GetParameter(1);
+//    xL = pos - 3.0 * sigma;
+//    xR = pos + 3.0 * sigma;
+//    f.SetRange(xL, xR);
+//    h->Fit("f", "RQN0");
 
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
     fP->SetLineColor(kOrange);
