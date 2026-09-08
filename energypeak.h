@@ -12,6 +12,7 @@ public:
         HYDROGENADD,
         HYDROGEN,
         CARBON,
+        SILICON,
         OXYGEN,
         OXYGENADD,
         FE7631,
