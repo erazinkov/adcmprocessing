@@ -90,8 +90,9 @@ int main(int argc, char *argv[])
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
     histogramWriter.addHists(histogramManager.histsEnergyByGamma());
-    histogramWriter.addHists(histogramManager.histsAmpByGamma());
-    histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
+    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
+//    histogramWriter.addHists(histogramManager.histsAmpByGamma());
+//    histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
     const std::string rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
     if (histogramWriter.write(rootFileName)) {
         std::cout << "Histograms successfully written to file " << rootFileName << std::endl;

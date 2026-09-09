@@ -18,9 +18,9 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
     fCalib_->SetParameter(2, 0.0);
 
     findPeakPosFunctions_ = {
-        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.2); }},
+        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.3); }},
         {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.2); }},
-        {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.2); }},
+        {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.5); }},
         {EnergyPeak::Id::SILICON, [&](TH1 *hist, TH1 *) { return findPeakPosSilicon(hist, 1.3); }},
         {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *) { return findPeakPosCarbon(hist, 1.35); }},
         {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *) { return findPeakPosOxygen(hist, 1.35); }},
@@ -45,11 +45,11 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     std::vector<EnergyPeak> peaks{
                 EnergyPeak{EnergyPeak::Id::FE847, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
-                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
-//                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
-                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
+//                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
+                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
+//                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
-//                EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
+                EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
 
     auto fe847PosApprox{getFerrum847PosApprox(histRc)};
@@ -164,7 +164,8 @@ double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h, const double A)
     double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
-    f.SetParameter(0, y(h, pos) - yR);
+//    f.SetParameter(0, y(h, pos) - yR);
+    f.SetParameter(0, 1.0e1);
     f.SetParameter(1, pos);
     f.SetParameter(2, sigma);
     f.SetParameter(3, p0);
@@ -223,7 +224,8 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
     double p1{(yR - yL) / (xR - xL)};
     double p0{yR - p1 * xR};
 
-    f.SetParameter(0, y(h, pos) - yR);
+//    f.SetParameter(0, y(h, pos) - yR);
+    f.SetParameter(0, 1.0e1);
     f.SetParameter(1, pos);
     f.SetParameter(2, sigma);
     f.SetParameter(3, p0);
