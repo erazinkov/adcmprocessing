@@ -18,7 +18,7 @@ Calibration::Calibration(HistogramManager *histogramManager)
     }
 }
 
-void Calibration::process()
+void Calibration::process(std::optional<std::string> internalEnergyPeaksFileName, std::optional<std::string> externalEnergyPeaksFileName)
 {
 
     fillHistsTimeByGammaAlpha(histogramManager_->histsTimeByGammaAlpha(), false);
@@ -39,11 +39,19 @@ void Calibration::process()
     fillHistsAmpByGamma(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
 
     energyPeaks_.clear();
-
-    for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-        energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i), histogramManager_->histsAmpByGammaRc().at(i));
-        energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
+    if (externalEnergyPeaksFileName.has_value()) {
+        loadEnergyPeaks(externalEnergyPeaksFileName.value_or("default_ep.root"));
+    } else {
+        for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+            energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i), histogramManager_->histsAmpByGammaRc().at(i));
+            energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
+        }
+        saveEnergyPeaks(internalEnergyPeaksFileName.value_or("default_ep.root"));
     }
+
+
+
+
 
     loadEnergyPeaks("/home/egor/projects/build-adcmprocessing-Desktop-Debug/results/b7_2_sep09_ep.root");
 
@@ -459,7 +467,6 @@ void Calibration::loadEnergyPeaks(const std::string &fileName)
             peaks.push_back(EnergyPeak{static_cast<EnergyPeak::Id>((*id)[k]), (*channel)[k]});
         }
     }
-    energyPeaks_.clear();
     energyPeaks_ = energyPeaks;
 }
 

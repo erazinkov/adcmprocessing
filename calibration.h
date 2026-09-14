@@ -14,7 +14,8 @@ class Calibration
 public:
     Calibration(HistogramManager *histogramManager);
 
-    void process();
+    void process(std::optional<std::string> internalEnergyPeaksFileName = std::nullopt,
+                 std::optional<std::string> externalEnergyPeaksFileName = std::nullopt);
     void setNewData(const std::unordered_map<std::pair<uint8_t, uint8_t>,
                           std::vector<dec_ev_t>, PairHash> &events,
                     const dec_ch_t &channels,
