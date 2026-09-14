@@ -45,10 +45,6 @@ double EnergyPeak::energyById(Id id)
         return 6129.0 - 511.0;
     case EnergyPeak::Id::OXYGEN:
         return 6129.0;
-//    case EnergyPeak::Id::FE7631ADD:
-//        return 7631.0 - 511.0;
-//    case EnergyPeak::Id::FE7631:
-//        return 7631.0;
     case EnergyPeak::Id::FE7631ADD:
         return 0.5 * (7631.1 + 7645.6) - 511.0;
     case EnergyPeak::Id::FE7631:

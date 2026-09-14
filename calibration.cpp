@@ -4,6 +4,9 @@
 #include "timepeaksfinder.h"
 #include "resolutionprocessing.h"
 
+#include <TFile.h>
+#include <TTree.h>
+
 Calibration::Calibration(HistogramManager *histogramManager)
     : histogramManager_{histogramManager}
 {
@@ -42,7 +45,7 @@ void Calibration::process()
         energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
     }
 
-
+    loadEnergyPeaks("/home/egor/projects/build-adcmprocessing-Desktop-Debug/results/b7_2_sep09_ep.root");
 
     fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
@@ -384,6 +387,80 @@ const std::map<uint8_t, double> &Calibration::countersG() const
 const std::map<uint8_t, double> &Calibration::countersA() const
 {
     return countersA_;
+}
+
+void Calibration::saveEnergyPeaks(const std::string &fileName)
+{
+    std::unique_ptr<TFile> file{new TFile(fileName.c_str(), "RECREATE")};
+    if (!file->IsOpen()) {
+        std::cout << "Can\'t open file " << fileName << std::endl;
+        return;
+    }
+    TTree *tree{new TTree("tree", "energyPeaks")};
+
+    std::vector<double> energy, channel;
+    std::vector<int> id;
+    int eventIdx{0};
+
+    tree->Branch("eventIdx", &eventIdx);
+    tree->Branch("id", &id);
+    tree->Branch("energy", &energy);
+    tree->Branch("channel", &channel);
+
+    for (size_t i{0}; i < energyPeaks_.size(); i++) {
+        eventIdx = i;
+        id.clear();energy.clear();channel.clear();
+        for (const auto& p : energyPeaks_.at(i)) {
+            id.push_back(static_cast<int>(p.id()));
+            energy.push_back(p.energy());
+            channel.push_back(p.channel());
+        }
+        tree->Fill();
+    }
+    tree->Write();
+    file.get()->Close();
+}
+
+void Calibration::loadEnergyPeaks(const std::string &fileName)
+{
+    std::unique_ptr<TFile> file{new TFile(fileName.c_str(), "READ")};
+    if (!file->IsOpen()) {
+        std::cout << "Can\'t open file " << fileName << std::endl;
+        return;
+    }
+    TTree *tree{static_cast<TTree*>(file.get()->Get("energyPeaks"))};
+
+    if (!tree) {
+        std::cout << "Can\'t load tree from file " << fileName << std::endl;
+        return;
+    }
+
+    int eventIdx{0};
+    std::vector<int>* id{nullptr};
+    std::vector<double>* energy{nullptr};
+    std::vector<double>* channel{nullptr};
+
+    tree->SetBranchAddress("eventIdx", &eventIdx);
+    tree->SetBranchAddress("id", &id);
+    tree->SetBranchAddress("energy", &energy);
+    tree->SetBranchAddress("channel", &channel);
+
+    Long64_t nEntries = tree->GetEntries();
+    std::vector<std::vector<EnergyPeak>> energyPeaks;
+
+    for (Long64_t i{0}; i < nEntries; i++) {
+        tree->GetEntry(i);
+        if (static_cast<int>(energyPeaks.size()) <= eventIdx) {
+            energyPeaks.resize(eventIdx + 1);
+        }
+        auto& peaks = energyPeaks[eventIdx];
+        peaks.clear();
+        for (size_t k{0}; k < id->size(); k++) {
+            peaks.push_back(EnergyPeak{static_cast<EnergyPeak::Id>((*id)[k]), (*channel)[k]});
+        }
+    }
+    energyPeaks_.clear();
+    energyPeaks_ = energyPeaks;
 }
 
 

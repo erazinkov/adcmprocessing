@@ -86,6 +86,8 @@ int main(int argc, char *argv[])
     start = std::chrono::steady_clock::now();
     calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
     calibration.process();
+    const std::string eProotFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
+//    calibration.saveEnergyPeaks(eProotFileName);
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());

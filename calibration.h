@@ -28,6 +28,9 @@ public:
 
     const std::map<uint8_t, double> &countersA() const;
 
+    void saveEnergyPeaks(const std::string &fileName);
+    void loadEnergyPeaks(const std::string &fileName);
+
 private:
     HistogramManager *histogramManager_;
     std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_t>> events_m_;
