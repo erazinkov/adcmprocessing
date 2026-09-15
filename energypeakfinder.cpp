@@ -12,7 +12,8 @@
 
 EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
 {
-    fCalib_ = new TF1("fCalib_", "pol2", 0.0, 8.0e3);
+    fCalib_ = std::make_unique<TF1>("fCalib_", "pol2", 0.0, 8.0e3);
+
     fCalib_->SetParameter(0, 0.0);
     fCalib_->SetParameter(1, 1.0);
     fCalib_->SetParameter(2, 0.0);
@@ -30,10 +31,6 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
 
 EnergyPeakFinder::~EnergyPeakFinder()
 {
-    if (fCalib_) {
-        delete fCalib_;
-        fCalib_ = nullptr;
-    }
 }
 
 void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
@@ -74,7 +71,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
             fCalib_->ReleaseParameter(1);
             fCalib_->ReleaseParameter(2);
         }
-        graphPolN.Fit(fCalib_, "RQN0");
+        graphPolN.Fit(fCalib_.get(), "RQN0");
     };
 
     for (size_t i{0}; i < peaks.size(); i++) {

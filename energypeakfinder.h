@@ -32,7 +32,7 @@ private:
 
     void findPeakPos(EnergyPeak &peak, TH1 *h);
 
-    TF1 *fCalib_;
+    std::unique_ptr<TF1> fCalib_;
 
     std::map<EnergyPeak::Id, std::function<double(TH1 *hist, TH1 *histRc)>> findPeakPosFunctions_;
 
