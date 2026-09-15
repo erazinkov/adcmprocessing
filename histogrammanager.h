@@ -16,42 +16,40 @@ public:
 
     void resetAll();
 
-    const std::vector<std::vector<TH1D *> > &histsAmpByGammaAlpha() const;
-    const std::vector<std::vector<TH1D *> > &histsTimeByGammaAlpha() const;
-
-    const std::vector<TH1D *> &histsAmpByAlpha() const;
-
-    const std::vector<std::vector<TH1D *> > &histsTimeCorrectedByGammaAlpha() const;
-
-    const std::vector<TH1D *> &histsTimeCorrectedByAlpha() const;
-
-    const std::vector<std::vector<TH1D *> > &histsAmpByGammaAlphaSg() const;
-
-    const std::vector<std::vector<TH1D *> > &histsAmpByGammaAlphaBg() const;
-
-    const std::vector<TH1D *> &histsAmpByGamma() const;
-
-    const std::vector<TH1D *> &histsAmpByGammaRc() const;
-
-    const std::vector<std::vector<TH1D *> > &histsAmpByGammaAlphaRc() const;
-
-    const std::vector<std::vector<TH1D *> > &histsEnergyByGammaAlphaSg() const;
-
-    const std::vector<std::vector<TH1D *> > &histsEnergyByGammaAlphaBg() const;
-
-    const std::vector<TH1D *> &histsEnergyByGamma() const;
-
-    const std::vector<TH1D *> &histsEnergyByAlpha() const;
-
-    TH1D *histTimeTotal() const;
-
-    TH1D *histEnergyTotal() const;
-
-    std::vector<TH1D *> histsTimeCorrectedByGamma() const;
-
     int gammaNumber() const;
-
     int alphaNumber() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsAmpByGammaAlphaSg() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsAmpByGammaAlphaBg() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsAmpByGammaAlphaRc() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsTimeByGammaAlpha() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsTimeCorrectedByGammaAlpha() const;
+
+    const std::vector<std::unique_ptr<TH1D> > &histsTimeCorrectedByAlpha() const;
+
+    const std::vector<std::unique_ptr<TH1D> > &histsTimeCorrectedByGamma() const;
+
+    const std::vector<std::unique_ptr<TH1D> > &histsAmpByAlpha() const;
+
+    const std::vector<std::unique_ptr<TH1D> > &histsAmpByGamma() const;
+
+    const std::vector<std::unique_ptr<TH1D> > &histsAmpByGammaRc() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsEnergyByGammaAlphaSg() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsEnergyByGammaAlphaBg() const;
+
+    const std::vector<std::unique_ptr<TH1D> > &histsEnergyByGamma() const;
+
+    const std::vector<std::unique_ptr<TH1D> > &histsEnergyByAlpha() const;
+
+    TH1D*histTimeTotal() const;
+
+    TH1D*histEnergyTotal() const;
 
 private:
     const int gammaNumber_;
@@ -70,28 +68,29 @@ private:
     static constexpr double XUP_ENERGY{8.0e3};
 
     std::optional<std::string> outputDirectory_;
-    std::vector<std::vector<TH1D *>> histsAmpByGammaAlphaSg_;
-    std::vector<std::vector<TH1D *>> histsAmpByGammaAlphaBg_;
-    std::vector<std::vector<TH1D *>> histsAmpByGammaAlphaRc_;
-    std::vector<std::vector<TH1D *>> histsTimeByGammaAlpha_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsAmpByGammaAlphaSg_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsAmpByGammaAlphaBg_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsAmpByGammaAlphaRc_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsTimeByGammaAlpha_;
 
-    std::vector<std::vector<TH1D *>> histsTimeCorrectedByGammaAlpha_;
-    std::vector<TH1D *> histsTimeCorrectedByAlpha_;
-    std::vector<TH1D *> histsTimeCorrectedByGamma_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsTimeCorrectedByGammaAlpha_;
+    std::vector<std::unique_ptr<TH1D>> histsTimeCorrectedByAlpha_;
+    std::vector<std::unique_ptr<TH1D>> histsTimeCorrectedByGamma_;
 
-    std::vector<TH1D *> histsAmpByAlpha_;
+    std::vector<std::unique_ptr<TH1D>> histsAmpByAlpha_;
 
-    std::vector<TH1D *> histsAmpByGamma_;
-    std::vector<TH1D *> histsAmpByGammaRc_;
+    std::vector<std::unique_ptr<TH1D>> histsAmpByGamma_;
+    std::vector<std::unique_ptr<TH1D>> histsAmpByGammaRc_;
 
 
-    std::vector<std::vector<TH1D *>> histsEnergyByGammaAlphaSg_;
-    std::vector<std::vector<TH1D *>> histsEnergyByGammaAlphaBg_;
-    std::vector<TH1D *> histsEnergyByGamma_;
-    std::vector<TH1D *> histsEnergyByAlpha_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsEnergyByGammaAlphaSg_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsEnergyByGammaAlphaBg_;
+    std::vector<std::unique_ptr<TH1D>> histsEnergyByGamma_;
+    std::vector<std::unique_ptr<TH1D>> histsEnergyByAlpha_;
 
-    TH1D *histTimeTotal_;
-    TH1D *histEnergyTotal_;
+    std::unique_ptr<TH1D> histTimeTotal_;
+    std::unique_ptr<TH1D> histEnergyTotal_;
+
 };
 
 #endif // HISTOGRAMMANAGER_H

@@ -52,28 +52,28 @@ private:
     void fillHistAmp(const std::vector<dec_ev_t> &events, TH1 *h, double minT, double maxT, bool exclude);
     void fillHistEnergy(const std::vector<dec_ev_t> &events, TH1 *h, double minT, double maxT, bool exclude, TF1 f);
 
-    void fillHistsTimeByGammaAlpha(const std::vector<std::vector<TH1D *>> &hists, bool isCorrected = false);
-    void fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<TH1D *>> &hists);
-    void fillHistTimeWithEnergyCutTotal(const std::vector<std::vector<TH1D *>> &hists);
-    void fillHistsTimeWithEnergyCutByGamma(const std::vector<std::vector<TH1D *>> &hists);
-    void fillHistsTimeByAlpha(const std::vector<std::vector<TH1D *>> &hists);
+    void fillHistsTimeByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists, bool isCorrected = false);
+    void fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);
+    void fillHistTimeWithEnergyCutTotal(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);
+    void fillHistsTimeWithEnergyCutByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);
+    void fillHistsTimeByAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);
 
-    void fillHistsAmpByGammaAlpha(const std::vector<std::vector<TH1D *> > &histsSg,
-                                  const std::vector<std::vector<TH1D *> > &histsBg,
-                                  const std::vector<std::vector<TH1D *> > &histsRc);
-    void fillHistsAmpByAlpha(const std::vector<std::vector<TH1D *>> &histsSg, const std::vector<std::vector<TH1D *> > &histsBg);
-    void fillHistsAmpByGamma(const std::vector<std::vector<TH1D *> > &histsSg,
-                             const std::vector<std::vector<TH1D *> > &histsBg,
-                             const std::vector<std::vector<TH1D *> > &histsRc);
+    void fillHistsAmpByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
+                                  const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg,
+                                  const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc);
+    void fillHistsAmpByAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &histsSg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg);
+    void fillHistsAmpByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
+                             const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg,
+                             const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc);
 
 
-    void fillHistsEnergyByGammaAlpha(const std::vector<std::vector<TH1D *> > &histsSg,
-                                  const std::vector<std::vector<TH1D *> > &histsBg);
+    void fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
+                                  const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg);
 
-    void fillHistsEnergyByGamma(const std::vector<std::vector<TH1D *> > &histsSg,
-                                  const std::vector<std::vector<TH1D *> > &histsBg);
-    void fillHistsEnergyByAlpha(const std::vector<std::vector<TH1D *> > &histsSg,
-                                  const std::vector<std::vector<TH1D *> > &histsBg);
+    void fillHistsEnergyByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
+                                  const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg);
+    void fillHistsEnergyByAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
+                                  const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg);
 
 };
 

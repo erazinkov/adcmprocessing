@@ -7,8 +7,8 @@ class HistogramPainter
 {
 public:
     static void paintHist(TH1D *hist, const std::string &fileName);
-    static void paintHists(const std::vector<TH1D *> &hists, const std::string &fileName);
-    static void paintHists(const std::vector<std::vector<TH1D *>> &hists, const std::string &fileName);
+    static void paintHists(const std::vector<std::unique_ptr<TH1D>> &hists, const std::string &fileName);
+    static void paintHists(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists, const std::string &fileName);
 private:
     HistogramPainter() = delete;
     HistogramPainter(const HistogramPainter&) = delete;

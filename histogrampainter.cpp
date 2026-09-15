@@ -25,7 +25,7 @@ void HistogramPainter::paintHist(TH1D *hist, const std::string &fileName)
     gErrorIgnoreLevel = 0;
 }
 
-void HistogramPainter::paintHists(const std::vector<TH1D *> &hists, const std::string &fileName)
+void HistogramPainter::paintHists(const std::vector<std::unique_ptr<TH1D>> &hists, const std::string &fileName)
 {
     gErrorIgnoreLevel = 3'000;
     std::unique_ptr<TCanvas> c{new TCanvas("c", "c", 1024, 960)};
@@ -33,7 +33,7 @@ void HistogramPainter::paintHists(const std::vector<TH1D *> &hists, const std::s
     for (size_t ig{0}; ig < hists.size(); ++ig) {
         if (hists.at(ig)) {
             gPad->SetGrid();
-            hists.at(ig)->GetXaxis()->SetRangeUser(0.0, 2'000.0);
+//            hists.at(ig)->GetXaxis()->SetRangeUser(0.0, 2'000.0);
             hists.at(ig)->Draw();
             auto listOfFunctions{hists.at(ig)->GetListOfFunctions()};
             for (auto *item : *listOfFunctions) {
@@ -49,7 +49,7 @@ void HistogramPainter::paintHists(const std::vector<TH1D *> &hists, const std::s
     gErrorIgnoreLevel = 0;
 }
 
-void HistogramPainter::paintHists(const std::vector<std::vector<TH1D *> > &hists, const std::string &fileName)
+void HistogramPainter::paintHists(const std::vector<std::vector<std::unique_ptr<TH1D>> > &hists, const std::string &fileName)
 {
     gErrorIgnoreLevel = 3'000;
     std::unique_ptr<TCanvas> c{new TCanvas("c", "c", 1024, 960)};

@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
-    histogramWriter.addHists(histogramManager.histsEnergyByGamma());
-    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
+//    histogramWriter.addHists(histogramManager.histsEnergyByGamma());
+//    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
 //    histogramWriter.addHists(histogramManager.histsAmpByGamma());
 //    histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
     const std::string rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     }
     // TODO !
 //    HistogramPainter::paintHist(histogramManager.histEnergyTotal(), AppConstants::OUTPUT_PATH + filePath.filename().string() + ".ps");
-//    HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".ps");
+    HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".ps");
     HistogramPainter::paintHists(histogramManager.histsAmpByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_sg" + ".pdf");
     HistogramPainter::paintHists(histogramManager.histsAmpByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_rc" + ".pdf");
 //    HistogramPainter::paintHists(histogramManager.histsEnergyByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy" + ".ps");
