@@ -73,6 +73,11 @@ HistogramManager::HistogramManager(const int &gammaNumber, const int &alphaNumbe
                          Form("hist_energy_by_gamma_bg_%d_alpha_%d", ig, ia),
                          Form("hist_energy_by_gamma_bg_%d_alpha_%d", ig, ia),
                          BINS_ENERGY, XLOW_ENERGY, XUP_ENERGY);
+            addHistogramToGrid(histsEnergyByGammaAlphaRc_,
+                         ig,
+                         Form("hist_energy_by_gamma_rc_%d_alpha_%d", ig, ia),
+                         Form("hist_energy_by_gamma_rc_%d_alpha_%d", ig, ia),
+                         BINS_ENERGY, XLOW_ENERGY, XUP_ENERGY);
         }
     }
 
@@ -92,6 +97,10 @@ HistogramManager::HistogramManager(const int &gammaNumber, const int &alphaNumbe
         addHistogramToRow(histsEnergyByGamma_,
                           Form("hist_energy_by_gamma_%d", ig),
                           Form("hist_energy_by_gamma_%d", ig),
+                          BINS_ENERGY, XLOW_ENERGY, XUP_ENERGY);
+        addHistogramToRow(histsEnergyByGammaRc_,
+                          Form("hist_energy_by_gamma_rc_%d", ig),
+                          Form("hist_energy_by_gamma_rc_%d", ig),
                           BINS_ENERGY, XLOW_ENERGY, XUP_ENERGY);
     }
 
@@ -125,6 +134,7 @@ void HistogramManager::resetAll()
             histsAmpByGammaAlphaRc_[ig][ia]->Reset();
             histsEnergyByGammaAlphaSg_[ig][ia]->Reset();
             histsEnergyByGammaAlphaBg_[ig][ia]->Reset();
+            histsEnergyByGammaAlphaRc_[ig][ia]->Reset();
         }
     }
     for (auto ia{0}; ia < alphaNumber_; ia++) {
@@ -136,6 +146,7 @@ void HistogramManager::resetAll()
             histsAmpByGamma_[ig]->Reset();
             histsAmpByGammaRc_[ig]->Reset();
             histsEnergyByGamma_[ig]->Reset();
+            histsEnergyByGammaRc_[ig]->Reset();
     }
 }
 
@@ -227,4 +238,14 @@ TH1D*HistogramManager::histTimeTotal() const
 TH1D*HistogramManager::histEnergyTotal() const
 {
     return histEnergyTotal_.get();
+}
+
+const std::vector<std::unique_ptr<TH1D> > &HistogramManager::histsEnergyByGammaRc() const
+{
+    return histsEnergyByGammaRc_;
+}
+
+const std::vector<std::vector<std::unique_ptr<TH1D> > > &HistogramManager::histsEnergyByGammaAlphaRc() const
+{
+    return histsEnergyByGammaAlphaRc_;
 }

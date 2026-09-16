@@ -14,8 +14,8 @@ class Calibration
 public:
     Calibration(HistogramManager *histogramManager);
 
-    void process(std::optional<std::string> internalEnergyPeaksFileName = std::nullopt,
-                 std::optional<std::string> externalEnergyPeaksFileName = std::nullopt);
+    void process(const std::string &internalEnergyPeaksFileName,
+                 const std::string &externalEnergyPeaksFileName = "");
     void setNewData(const std::unordered_map<std::pair<uint8_t, uint8_t>,
                           std::vector<dec_ev_t>, PairHash> &events,
                     const dec_ch_t &channels,
@@ -68,10 +68,12 @@ private:
 
 
     void fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
-                                  const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg);
+                                     const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg,
+                                     const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc);
 
     void fillHistsEnergyByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
-                                  const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg);
+                                const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg,
+                                const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc);
     void fillHistsEnergyByAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
                                   const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg);
 

@@ -85,9 +85,10 @@ int main(int argc, char *argv[])
     Calibration calibration(&histogramManager);
     start = std::chrono::steady_clock::now();
     calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
-    calibration.process();
-    const std::string eProotFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
-//    calibration.saveEnergyPeaks(eProotFileName);
+
+    const std::string internalEnergyPeaksFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
+    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep.root"};
+    calibration.process(internalEnergyPeaksFileName);
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
@@ -100,11 +101,12 @@ int main(int argc, char *argv[])
         std::cout << "Histograms successfully written to file " << rootFileName << std::endl;
     }
     // TODO !
-//    HistogramPainter::paintHist(histogramManager.histEnergyTotal(), AppConstants::OUTPUT_PATH + filePath.filename().string() + ".ps");
-    HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".ps");
+//    HistogramPainter::paintHist(histogramManager.histEnergyTotal(), AppConstants::OUTPUT_PATH + filePath.filename().string() + ".pdf");
+    HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".pdf");
     HistogramPainter::paintHists(histogramManager.histsAmpByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_sg" + ".pdf");
     HistogramPainter::paintHists(histogramManager.histsAmpByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_rc" + ".pdf");
-//    HistogramPainter::paintHists(histogramManager.histsEnergyByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy" + ".ps");
+    HistogramPainter::paintHists(histogramManager.histsEnergyByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_sg" + ".pdf");
+     HistogramPainter::paintHists(histogramManager.histsEnergyByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_rc" + ".pdf");
 
     auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 

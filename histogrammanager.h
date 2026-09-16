@@ -51,6 +51,10 @@ public:
 
     TH1D*histEnergyTotal() const;
 
+    const std::vector<std::unique_ptr<TH1D> > &histsEnergyByGammaRc() const;
+
+    const std::vector<std::vector<std::unique_ptr<TH1D> > > &histsEnergyByGammaAlphaRc() const;
+
 private:
     const int gammaNumber_;
     const int alphaNumber_;
@@ -85,7 +89,9 @@ private:
 
     std::vector<std::vector<std::unique_ptr<TH1D>>> histsEnergyByGammaAlphaSg_;
     std::vector<std::vector<std::unique_ptr<TH1D>>> histsEnergyByGammaAlphaBg_;
+    std::vector<std::vector<std::unique_ptr<TH1D>>> histsEnergyByGammaAlphaRc_;
     std::vector<std::unique_ptr<TH1D>> histsEnergyByGamma_;
+    std::vector<std::unique_ptr<TH1D>> histsEnergyByGammaRc_;
     std::vector<std::unique_ptr<TH1D>> histsEnergyByAlpha_;
 
     std::unique_ptr<TH1D> histTimeTotal_;

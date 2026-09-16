@@ -33,7 +33,8 @@ void HistogramPainter::paintHists(const std::vector<std::unique_ptr<TH1D>> &hist
     for (size_t ig{0}; ig < hists.size(); ++ig) {
         if (hists.at(ig)) {
             gPad->SetGrid();
-//            hists.at(ig)->GetXaxis()->SetRangeUser(0.0, 2'000.0);
+//            hists.at(ig)->GetXaxis()->SetRangeUser(0.0, 3'000.0);
+            hists.at(ig)->SetStats(false);
             hists.at(ig)->Draw();
             auto listOfFunctions{hists.at(ig)->GetListOfFunctions()};
             for (auto *item : *listOfFunctions) {
@@ -41,6 +42,9 @@ void HistogramPainter::paintHists(const std::vector<std::unique_ptr<TH1D>> &hist
             }
         } else {
             std::cout << "Can\'t paint " << hists.at(ig)->GetName() << " to file " << fileName << std::endl;
+        }
+        if (hists.at(ig)->GetEntries() == 0) {
+            continue;
         }
         c.get()->Print(fileName.c_str());
     }

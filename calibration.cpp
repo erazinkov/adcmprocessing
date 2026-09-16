@@ -18,7 +18,7 @@ Calibration::Calibration(HistogramManager *histogramManager)
     }
 }
 
-void Calibration::process(std::optional<std::string> internalEnergyPeaksFileName, std::optional<std::string> externalEnergyPeaksFileName)
+void Calibration::process(const std::string &internalEnergyPeaksFileName, const std::string &externalEnergyPeaksFileName)
 {
 
     fillHistsTimeByGammaAlpha(histogramManager_->histsTimeByGammaAlpha(), false);
@@ -39,27 +39,26 @@ void Calibration::process(std::optional<std::string> internalEnergyPeaksFileName
     fillHistsAmpByGamma(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
 
     energyPeaks_.clear();
-    if (externalEnergyPeaksFileName.has_value()) {
-        loadEnergyPeaks(externalEnergyPeaksFileName.value_or("default_ep.root"));
-    } else {
+    if (externalEnergyPeaksFileName.empty()) {
+        std::cout << "Here 2!" << std::endl;
         for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
             energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i).get(), histogramManager_->histsAmpByGammaRc().at(i).get());
             energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
         }
-        saveEnergyPeaks(internalEnergyPeaksFileName.value_or("default_ep.root"));
+        saveEnergyPeaks(internalEnergyPeaksFileName);
+
+    } else {
+        std::cout << "Use external energy peaks positions: " << " " << externalEnergyPeaksFileName<< std::endl;
+        loadEnergyPeaks(externalEnergyPeaksFileName);
     }
-
-
-
-
 
 //    loadEnergyPeaks("/home/egor/projects/build-adcmprocessing-Desktop-Debug/results/b7_2_sep09_ep.root");
 
-    fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
-    fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
-//  for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-//      energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i), histogramManager_->histsEnergyByGamma().at(i));
-//  }
+    fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
+    fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
+  for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+      energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i).get(), histogramManager_->histsEnergyByGammaRc().at(i).get());
+  }
     // !
 
 //    ResolutionProcessing rP;
@@ -259,6 +258,40 @@ void Calibration::fillHistsAmpByAlpha(const std::vector<std::vector<std::unique_
     }
 }
 
+
+
+void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc)
+{
+    std::vector<TF1> fs;
+    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
+        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+        TF1 f("f", fObj, 0, 4'000, 0);
+        fs.push_back(f);
+    }
+    std::vector<std::function<void()>> tasks;
+    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
+        for (size_t j{0}; j <  std::min(histsSg.at(i).size(), channels_.a.size()); ++j) {
+            tasks.push_back([this, &histsSg, &histsBg, &histsRc, i, j, &fs](){
+                histsSg.at(i).at(j)->Reset();
+                histsBg.at(i).at(j)->Reset();
+                histsRc.at(i).at(j)->Reset();
+                std::pair<uint8_t, uint8_t> p{*std::next(channels_.g.begin(), i), *std::next(channels_.a.begin(), j)};
+                if (events_m_.find(p) != events_m_.end()) {
+                    auto minT_sg{timeCorrections_.at({i, j}) - 3.0};
+                    auto maxT_sg{timeCorrections_.at({i, j}) + 3.0};
+                    fillHistEnergy(events_m_[p], histsSg.at(i).at(j).get(), minT_sg, maxT_sg, false, fs.at(i));
+                    auto minT_bg{timeCorrections_.at({i, j}) - 30.0};
+                    auto maxT_bg{timeCorrections_.at({i, j}) - 20.0};
+                    fillHistEnergy(events_m_[p], histsBg.at(i).at(j).get(), minT_bg, maxT_bg, false, fs.at(i));
+                    fillHistEnergy(events_m_[p], histsRc.at(i).at(j).get(), minT_bg, maxT_bg, true, fs.at(i));
+                }
+            });
+        }
+    }
+    func_async(tasks.begin(), tasks.end());
+    tasks.clear();
+}
+
 void Calibration::fillHistsAmpByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
                                       const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg,
                                       const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc)
@@ -277,47 +310,23 @@ void Calibration::fillHistsAmpByGamma(const std::vector<std::vector<std::unique_
     }
 }
 
-void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg)
-{
-    std::vector<TF1> fs;
-    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
-        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
-        TF1 f("f", fObj, 0, 4'000, 0);
-        fs.push_back(f);
-    }
-    std::vector<std::function<void()>> tasks;
-    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
-        for (size_t j{0}; j <  std::min(histsSg.at(i).size(), channels_.a.size()); ++j) {
-            tasks.push_back([this, &histsSg, &histsBg, i, j, &fs](){
-                histsSg.at(i).at(j)->Reset();
-                histsBg.at(i).at(j)->Reset();
-                std::pair<uint8_t, uint8_t> p{*std::next(channels_.g.begin(), i), *std::next(channels_.a.begin(), j)};
-                if (events_m_.find(p) != events_m_.end()) {
-                    auto minT_sg{timeCorrections_.at({i, j}) - 3.0};
-                    auto maxT_sg{timeCorrections_.at({i, j}) + 3.0};
-                    fillHistEnergy(events_m_[p], histsSg.at(i).at(j).get(), minT_sg, maxT_sg, false, fs.at(i));
-                    auto minT_bg{timeCorrections_.at({i, j}) - 30.0};
-                    auto maxT_bg{timeCorrections_.at({i, j}) - 20.0};
-                    fillHistEnergy(events_m_[p], histsBg.at(i).at(j).get(), minT_bg, maxT_bg, false, fs.at(i));
-                }
-            });
-        }
-    }
-    func_async(tasks.begin(), tasks.end());
-    tasks.clear();
-}
-
-void Calibration::fillHistsEnergyByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg)
+void Calibration::fillHistsEnergyByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg,
+                                         const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg,
+                                         const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc)
 {
     for (size_t i{0}; i <  histogramManager_->histsEnergyByGamma().size(); ++i) {
         histogramManager_->histsEnergyByGamma()[i]->Reset();
+        histogramManager_->histsEnergyByGammaRc()[i]->Reset();
     }
     for (size_t i{0}; i < histsSg.size(); ++i) {
         for (size_t j{0}; j <  histsSg.at(i).size(); ++j) {
             histogramManager_->histsEnergyByGamma()[i]->Add(histsSg.at(i).at(j).get());
             histogramManager_->histsEnergyByGamma()[i]->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
-            histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j).get());
-            histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
+
+            histogramManager_->histsEnergyByGammaRc()[i]->Add(histsRc.at(i).at(j).get());
+
+//            histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j).get());
+//            histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
         }
     }
 }
@@ -399,12 +408,13 @@ const std::map<uint8_t, double> &Calibration::countersA() const
 
 void Calibration::saveEnergyPeaks(const std::string &fileName)
 {
-    std::unique_ptr<TFile> file{new TFile(fileName.c_str(), "RECREATE")};
-    if (!file->IsOpen()) {
+    std::unique_ptr<TFile> file = std::make_unique<TFile>(fileName.c_str(), "RECREATE");
+    if (!file || file->IsZombie()) {
         std::cout << "Can\'t open file " << fileName << std::endl;
         return;
     }
-    TTree *tree{new TTree("tree", "energyPeaks")};
+    std::unique_ptr<TTree> tree = std::make_unique<TTree>("energyPeaks", "energyPeaks");
+    tree->SetDirectory(nullptr);
 
     std::vector<double> energy, channel;
     std::vector<int> id;
@@ -425,20 +435,20 @@ void Calibration::saveEnergyPeaks(const std::string &fileName)
         }
         tree->Fill();
     }
+    file->cd();
     tree->Write();
-    file.get()->Close();
 }
 
 void Calibration::loadEnergyPeaks(const std::string &fileName)
 {
-    std::unique_ptr<TFile> file{new TFile(fileName.c_str(), "READ")};
-    if (!file->IsOpen()) {
+    std::unique_ptr<TFile> file = std::make_unique<TFile>(fileName.c_str(), "READ");
+    if (!file || file->IsZombie()) {
         std::cout << "Can\'t open file " << fileName << std::endl;
         return;
     }
-    TTree *tree{static_cast<TTree*>(file.get()->Get("energyPeaks"))};
-
-    if (!tree) {
+    TTree *tree{nullptr};
+    file->GetObject("energyPeaks", tree);
+    if (!tree || tree->IsZombie()) {
         std::cout << "Can\'t load tree from file " << fileName << std::endl;
         return;
     }
@@ -467,7 +477,9 @@ void Calibration::loadEnergyPeaks(const std::string &fileName)
             peaks.push_back(EnergyPeak{static_cast<EnergyPeak::Id>((*id)[k]), (*channel)[k]});
         }
     }
+
     energyPeaks_ = energyPeaks;
+
 }
 
 
