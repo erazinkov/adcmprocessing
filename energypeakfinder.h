@@ -22,6 +22,10 @@ public:
     static std::pair<double, double> calculateResolution(TH1 *hist);
 
 private:
+    struct PeakPos {
+        double pos;
+        double err;
+    };
     double calib_;
     double offset_;
 
@@ -32,17 +36,16 @@ private:
 
     std::unique_ptr<TF1> fCalib_;
 
-    std::map<EnergyPeak::Id, std::function<double(TH1 *hist, TH1 *histRc)>> findPeakPosFunctions_;
+    std::map<EnergyPeak::Id, std::function<PeakPos(TH1 *hist, TH1 *histRc)>> findPeakPosFunctions_;
 
     double findPeakPosFerrum847Approx(TH1 *h);
-    double findPeakPosFerrum847(TH1 *h, const double A);
-    double findPeakPosFerrum1238(TH1 *h, const double A);
-    double findPeakPosHydrogen(TH1 *h, const double A);
-    double findPeakPosSilicon(TH1 *h, const double A);
-    double findPeakPosCarbon(TH1 *h, const double A);
-    double findPeakPosOxygen(TH1 *h, const double A);
-
-    double findPeakPosFerrum7631(TH1 *h, const double A);
+    PeakPos findPeakPosFerrum847(TH1 *h, const double A);
+    PeakPos findPeakPosFerrum1238(TH1 *h, const double A);
+    PeakPos findPeakPosHydrogen(TH1 *h, const double A);
+    PeakPos findPeakPosSilicon(TH1 *h, const double A);
+    PeakPos findPeakPosCarbon(TH1 *h, const double A);
+    PeakPos findPeakPosOxygen(TH1 *h, const double A);
+    PeakPos findPeakPosFerrum7631(TH1 *h, const double A);
 
 };
 

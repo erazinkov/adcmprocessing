@@ -9,10 +9,11 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <iomanip>
 
 EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
 {
-    fCalib_ = std::make_unique<TF1>("fCalib_", "pol2", 0.0, 8.0e3);
+    fCalib_ = std::make_unique<TF1>("fCalib_", "[0]+[1]*x+[2]*x*x", 0.0, 8.0e3);
 
     fCalib_->SetParameter(0, 0.0);
     fCalib_->SetParameter(1, 1.0);
@@ -71,13 +72,15 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
             fCalib_->ReleaseParameter(1);
             fCalib_->ReleaseParameter(2);
         }
-        graphPolN.Fit(fCalib_.get(), "RQN0");
+        graphPolN.Fit(fCalib_.get(), "RQN0W");
     };
 
     for (size_t i{0}; i < peaks.size(); i++) {
         auto peakPos{findPeakPosFunctions_.at(peaks.at(i).id())(hist, histRc)};
-        peaks.at(i).setChannel(peakPos);
-        graphPolN.SetPoint(i, peakPos, peaks.at(i).energy());
+        peaks.at(i).setChannel(peakPos.pos);
+        peaks.at(i).setChannelErr(peakPos.err);
+        graphPolN.SetPoint(i, peakPos.pos, peaks.at(i).energy());
+        graphPolN.SetPointError(i, peakPos.err, 0.1);
         fitGraph();
     }
     // for (size_t i{0}; i < peaks.size(); i++) {
@@ -126,9 +129,14 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
 
 
 
+//    for (size_t i{0}; i < peaks.size(); i++) {
+//        auto peakPos{findPeakPosFunctions_.at(peaks.at(i).id())(hist, histRc)};
+//        std::cout << std::fixed << std::setprecision(2) << peakPos.pos << "\u00B1" << peakPos.err << " ";
+//    }
+//    std::cout << std::endl;
     for (size_t i{0}; i < peaks.size(); i++) {
         auto peakPos{findPeakPosFunctions_.at(peaks.at(i).id())(hist, histRc)};
-        std::cout << peakPos << " ";
+        std::cout << std::fixed << std::setprecision(2) << peakPos.pos << " ";
     }
     std::cout << std::endl;
 
@@ -148,7 +156,7 @@ double EnergyPeakFinder::findPeakPosFerrum847Approx(TH1 *h)
 
 }
 
-double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h, const double A)
+EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosFerrum847(TH1 *h, const double A)
 {
     double peakEnergy{EnergyPeak::energyById(EnergyPeak::Id::FE847)};
     double pos{fCalib_->GetX(peakEnergy)};
@@ -207,10 +215,10 @@ double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h, const double A)
     lPrev->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(lPrev);
 
-    return f.GetParameter(1);
+    return {f.GetParameter(1), f.GetParError(1)};
 }
 
-double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
+EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
 {
     double peakEnergy{EnergyPeak::energyById(EnergyPeak::Id::FE1238)};
     double pos{fCalib_->GetX(peakEnergy)};
@@ -269,10 +277,10 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
     lPrev->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(lPrev);
 
-    return f.GetParameter(1);
+    return {f.GetParameter(1), f.GetParError(1)};
 }
 
-double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
+EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
 {
     double peakEnergyAdd{EnergyPeak::energyById(EnergyPeak::Id::HYDROGENADD)};
     double posAdd{fCalib_->GetX(peakEnergyAdd)};
@@ -375,10 +383,10 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
     lPrev->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(lPrev);
 
-    return f.GetParameter(1);
+    return {f.GetParameter(1), f.GetParError(1)};
 }
 
-double EnergyPeakFinder::findPeakPosSilicon(TH1 *h, const double A)
+EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosSilicon(TH1 *h, const double A)
 {
     double peakEnergy{EnergyPeak::energyById(EnergyPeak::Id::SILICON)};
     double pos{fCalib_->GetX(peakEnergy)};
@@ -435,10 +443,10 @@ double EnergyPeakFinder::findPeakPosSilicon(TH1 *h, const double A)
     lPrev->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(lPrev);
 
-    return f.GetParameter(1);
+    return {f.GetParameter(1), f.GetParError(1)};
 }
 
-double EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
+EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
 {
     double peakEnergy{EnergyPeak::energyById(EnergyPeak::Id::CARBON)};
     double pos{fCalib_->GetX(peakEnergy)};
@@ -495,10 +503,10 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
     lPrev->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(lPrev);
 
-    return f.GetParameter(1);
+    return {f.GetParameter(1), f.GetParError(1)};
 }
 
-double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
+EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
 {
     double peakEnergyAdd{EnergyPeak::energyById(EnergyPeak::Id::OXYGENADD)};
     double posAdd{fCalib_->GetX(peakEnergyAdd)};
@@ -583,10 +591,10 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
     lPrev->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(lPrev);
 
-    return f.GetParameter(1);
+    return {f.GetParameter(1), f.GetParError(1)};
 }
 
-double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
+EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
 {
 
     double peakEnergyAdd{EnergyPeak::energyById(EnergyPeak::Id::FE7631ADD)};
@@ -683,7 +691,7 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
     lPrev->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(lPrev);
 
-    return f.GetParameter(1);
+    return {f.GetParameter(1), f.GetParError(1)};
 }
 
 
