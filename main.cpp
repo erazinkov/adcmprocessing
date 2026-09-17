@@ -87,8 +87,9 @@ int main(int argc, char *argv[])
     calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
 
     const std::string internalEnergyPeaksFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
-    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep.root"};
-    calibration.process(internalEnergyPeaksFileName, externalEnergyPeaksFileName);
+//    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep_silicon.root"};
+    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep_carbon.root"};
+    calibration.process(internalEnergyPeaksFileName);
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
