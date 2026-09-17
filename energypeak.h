@@ -18,7 +18,7 @@ public:
         FE7631,
         FE7631ADD
     };
-    EnergyPeak(EnergyPeak::Id id, double channel);
+    EnergyPeak(EnergyPeak::Id id, double channel, double channelErr = 0.0);
     EnergyPeak::Id id() const;
 
     double channel() const;
@@ -33,9 +33,14 @@ public:
         return channel_ < other.channel_;
     }
 
+    double channelErr() const;
+
+    void setChannelErr(double newChannelErr);
+
 private:
     EnergyPeak::Id id_;
     double channel_;
+    double channelErr_;
     double energy_;
 };
 

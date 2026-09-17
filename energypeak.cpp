@@ -1,7 +1,7 @@
 #include "energypeak.h"
 
-EnergyPeak::EnergyPeak(EnergyPeak::Id id, double channel) :
-    id_(id), channel_(channel)
+EnergyPeak::EnergyPeak(EnergyPeak::Id id, double channel, double channelErr) :
+    id_(id), channel_(channel), channelErr_(channelErr)
 {
     energy_ = energyById(id);
 }
@@ -51,4 +51,14 @@ double EnergyPeak::energyById(Id id)
         return 0.5 * (7631.1 + 7645.6);
     }
     return 0.0;
+}
+
+double EnergyPeak::channelErr() const
+{
+    return channelErr_;
+}
+
+void EnergyPeak::setChannelErr(double newChannelErr)
+{
+    channelErr_ = newChannelErr;
 }

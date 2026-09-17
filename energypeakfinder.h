@@ -28,15 +28,13 @@ private:
     std::vector<EnergyPeak>  energyPeaks_;
     EnergyPeak energyPeak_{EnergyPeak(EnergyPeak::Id::FE847, 0.0)};
 
-    double getFerrum847PosApprox(TH1 *h);
-
     void findPeakPos(EnergyPeak &peak, TH1 *h);
 
     std::unique_ptr<TF1> fCalib_;
 
     std::map<EnergyPeak::Id, std::function<double(TH1 *hist, TH1 *histRc)>> findPeakPosFunctions_;
 
-    double findPeakPosFerrum847Approx(TH1 *h, const double A);
+    double findPeakPosFerrum847Approx(TH1 *h);
     double findPeakPosFerrum847(TH1 *h, const double A);
     double findPeakPosFerrum1238(TH1 *h, const double A);
     double findPeakPosHydrogen(TH1 *h, const double A);
