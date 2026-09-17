@@ -1,6 +1,7 @@
 #include "calibration.h"
 #include "utils.h"
-#include "piecewiselinearfunction.h"
+//#include "piecewiselinearfunction.h"
+#include "polynomialfunction.h"
 #include "timepeaksfinder.h"
 #include "resolutionprocessing.h"
 
@@ -40,7 +41,7 @@ void Calibration::process(const std::string &internalEnergyPeaksFileName, const 
 
     energyPeaks_.clear();
     if (externalEnergyPeaksFileName.empty()) {
-        std::cout << "Here 2!" << std::endl;
+        std::cout << "Use internal energy peaks positions" << std::endl;
         for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
             energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i).get(), histogramManager_->histsAmpByGammaRc().at(i).get());
             energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
@@ -96,7 +97,8 @@ void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i) {
-        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+//        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+        PolynomialFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
     }
@@ -176,8 +178,7 @@ void Calibration::fillHistAmp(const std::vector<dec_ev_t> &events, TH1 *h, doubl
             if (t < minT || maxT < t) {
                 h->Fill(a);
             }
-        }
-        else {
+        } else {
             if (minT <= t && t <= maxT) {
                 h->Fill(a);
             }
@@ -194,8 +195,7 @@ void Calibration::fillHistEnergy(const std::vector<dec_ev_t> &events, TH1 *h, do
             if (t < minT || maxT < t) {
                 h->Fill(f.Eval(a));
             }
-        }
-        else {
+        } else {
             if (minT <= t && t <= maxT) {
                 h->Fill(f.Eval(a));
             }
@@ -264,7 +264,8 @@ void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std:
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
-        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+//        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+        PolynomialFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
     }

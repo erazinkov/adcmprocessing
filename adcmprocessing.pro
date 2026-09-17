@@ -18,6 +18,7 @@ SOURCES += \
         histogramwriter.cpp \
         main.cpp \
         piecewiselinearfunction.cpp \
+        polynomialfunction.cpp \
         resolutionprocessing.cpp \
         timepeaksfinder.cpp
 
@@ -38,6 +39,7 @@ HEADERS += \
         histogrampainter.h \
         histogramwriter.h \
         piecewiselinearfunction.h \
+        polynomialfunction.h \
         progressbar.h \
         resolutionprocessing.h \
         spinner.h \

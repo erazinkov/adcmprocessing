@@ -42,7 +42,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     std::vector<EnergyPeak> peaks{
                 EnergyPeak{EnergyPeak::Id::FE847, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
-                EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
+//                EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
@@ -99,6 +99,11 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     //     peaks.at(i).setChannel(peakPos);
     // }
 
+//    peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [](const EnergyPeak& p) {
+//        return p.id() == EnergyPeak::Id::HYDROGEN;
+//    }
+//    ),peaks.end());
+
     std::sort(peaks.begin(), peaks.end());
 
     energyPeaks_ = std::move(peaks);
@@ -116,6 +121,7 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
                                   EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                                  EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
                                   EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
+//                                  EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
                                   };
 
 
@@ -179,6 +185,8 @@ double EnergyPeakFinder::findPeakPosFerrum847(TH1 *h, const double A)
     pos = f.GetParameter(1);
     xL = pos - 3.0 * sigma;
     xR = pos + 3.0 * sigma;
+    yL = y(h, xL);
+    yR = y(h, xR);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
@@ -239,6 +247,8 @@ double EnergyPeakFinder::findPeakPosFerrum1238(TH1 *h, const double A)
     pos = f.GetParameter(1);
     xL = pos - 3.0 * sigma;
     xR = pos + 3.0 * sigma;
+    yL = y(h, xL);
+    yR = y(h, xR);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
@@ -322,6 +332,8 @@ double EnergyPeakFinder::findPeakPosHydrogen(TH1 *h, const double A)
     pos = f.GetParameter(1);
     xL = posAdd - 3.0 * sigmaAdd;
     xR = pos + 3.0 * sigma;
+    yL = y(h, xL);
+    yR = y(h, xR);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
@@ -401,6 +413,8 @@ double EnergyPeakFinder::findPeakPosSilicon(TH1 *h, const double A)
     pos = f.GetParameter(1);
     xL = pos - 3.0 * sigma;
     xR = pos + 3.0 * sigma;
+    yL = y(h, xL);
+    yR = y(h, xR);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
@@ -459,6 +473,8 @@ double EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const double A)
     pos = f.GetParameter(1);
     xL = pos - 3.0 * sigma;
     xR = pos + 3.0 * sigma;
+    yL = y(h, xL);
+    yR = y(h, xR);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
@@ -542,6 +558,8 @@ double EnergyPeakFinder::findPeakPosOxygen(TH1 *h, const double A)
     pos = f.GetParameter(1);
     xL = posAdd - 3.0 * sigmaAdd;
     xR = pos + 3.0 * sigma;
+    yL = y(h, xL);
+    yR = y(h, xR);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
@@ -572,7 +590,7 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
 {
 
     double peakEnergyAdd{EnergyPeak::energyById(EnergyPeak::Id::FE7631ADD)};
-    peakEnergyAdd -= 125.0;
+    peakEnergyAdd -= 25.0;
     double posAdd{fCalib_->GetX(peakEnergyAdd)};
     double sigmaAdd{fCalib_->GetX(TMath::Sqrt(peakEnergyAdd) * A)};
 
@@ -629,10 +647,17 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
 //    f.SetParLimits(6, 0.75 * (pos - posAdd), 1.25 * (pos - posAdd));
     h->Fit("f","RQN0");
 
+
+
+
+
+
     posAdd = f.GetParameter(1) - (pos - posAdd);
     pos = f.GetParameter(1);
     xL = posAdd - 3.0 * sigmaAdd;
     xR = pos + 3.0 * sigma;
+    yL = y(h, xL);
+    yR = y(h, xR);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 
@@ -651,6 +676,7 @@ double EnergyPeakFinder::findPeakPosFerrum7631(TH1 *h, const double A)
     TLine *lAdd{new TLine(posAdd, 0.0, posAdd, h->GetMaximum())};
     lAdd->SetLineColor(kMagenta);
     h->GetListOfFunctions()->Add(l);
+
     h->GetListOfFunctions()->Add(lAdd);
 
     TLine *lPrev{new TLine(xL, yL, xR, yR)};
