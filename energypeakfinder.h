@@ -45,6 +45,7 @@ private:
     PeakPos findPeakPosSilicon(TH1 *h, const double A);
     PeakPos findPeakPosCarbon(TH1 *h, const double A);
     PeakPos findPeakPosOxygen(TH1 *h, const double A);
+    PeakPos findPeakPosOxygenAdd(TH1 *h, const double A);
     PeakPos findPeakPosFerrum7631(TH1 *h, const double A);
 
 };

@@ -16,7 +16,7 @@ PolynomialFunction::Par PolynomialFunction::par(const std::vector<EnergyPeak> &e
 
     for (size_t i{0}; i < energyPeaks.size(); ++i) {
         g.SetPoint(static_cast<int>(i), energyPeaks.at(i).channel(), energyPeaks.at(i).energy());
-        g.SetPointError(static_cast<int>(i), energyPeaks.at(i).channelErr(), 0.1);
+        g.SetPointError(static_cast<int>(i), energyPeaks.at(i).channelErr(), 1.0 * energyPeaks.at(i).energy());
     }
     g.Fit(&f, "RQN0");
 
