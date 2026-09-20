@@ -74,7 +74,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
             fCalib_->ReleaseParameter(1);
             fCalib_->ReleaseParameter(2);
         }
-        graphPolN.Fit(fCalib_.get(), "RQN0W");
+        graphPolN.Fit(fCalib_.get(), "RQN0");
     };
 
     for (size_t i{0}; i < peaks.size(); i++) {
@@ -82,7 +82,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
         peaks.at(i).setChannel(peakPos.pos);
         peaks.at(i).setChannelErr(peakPos.err);
         graphPolN.SetPoint(i, peakPos.pos, peaks.at(i).energy());
-        graphPolN.SetPointError(i, peakPos.err, 1.0 * peaks.at(i).energy());
+        // graphPolN.SetPointError(i, peakPos.err, TMath::Sqrt(peaks.at(i).energy()) * 1.2);
         fitGraph();
     }
     // for (size_t i{0}; i < peaks.size(); i++) {
