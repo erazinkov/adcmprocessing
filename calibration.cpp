@@ -1,12 +1,14 @@
 #include "calibration.h"
 #include "utils.h"
-// #include "piecewiselinearfunction.h"
-#include "polynomialfunction.h"
+ #include "piecewiselinearfunction.h"
+//#include "polynomialfunction.h"
 #include "timepeaksfinder.h"
 #include "resolutionprocessing.h"
 
 #include <TFile.h>
 #include <TTree.h>
+
+#include "consoletable.h"
 
 Calibration::Calibration(HistogramManager *histogramManager)
     : histogramManager_{histogramManager}
@@ -41,19 +43,31 @@ void Calibration::process(const std::string &internalEnergyPeaksFileName, const 
 
     energyPeaks_.clear();
     if (externalEnergyPeaksFileName.empty()) {
-        std::cout << "Use internal energy peaks positions" << std::endl;
+        std::cout << "Use" << std::string(GREEN) + " internal " + RESET + "energy peaks positions" << std::endl;
         for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
             energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i).get(), histogramManager_->histsAmpByGammaRc().at(i).get());
             energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
+//            std::cout << i << " ";
+//            for (const auto &p : energyPeaks_.back()) {
+//                std::cout << "x " << p.channel() << " " << "y " << p.energy() << " ";
+//            }
+//            std::cout << std::endl;
         }
         saveEnergyPeaks(internalEnergyPeaksFileName);
 
     } else {
-        std::cout << "Use external energy peaks positions: " << " " << externalEnergyPeaksFileName<< std::endl;
+        std::cout << "Use" << std::string(RED) + " external " + RESET + "energy peaks positions" << std::endl;
+        std::vector<std::vector<EnergyPeak>> energyPeaks;
+        for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+            energyPeakFinder_.processExternal(histogramManager_->histsAmpByGamma().at(i).get(), histogramManager_->histsAmpByGammaRc().at(i).get());
+            energyPeaks.push_back(energyPeakFinder_.energyPeaks());
+        }
         loadEnergyPeaks(externalEnergyPeaksFileName);
+        for (size_t i{0}; i < energyPeaks.size(); i++) {
+            energyPeakFinder_.processExternal(energyPeaks.at(i), energyPeaks_.at(i));
+        }
     }
 
-//    loadEnergyPeaks("/home/egor/projects/build-adcmprocessing-Desktop-Debug/results/b7_2_sep09_ep.root");
 
     fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
@@ -97,8 +111,8 @@ void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i) {
-       // PiecewiseLinearFunction fObj(energyPeaks_.at(i));
-        PolynomialFunction fObj(energyPeaks_.at(i));
+        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+//        PolynomialFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
     }
@@ -264,8 +278,8 @@ void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std:
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
-       // PiecewiseLinearFunction fObj(energyPeaks_.at(i));
-        PolynomialFunction fObj(energyPeaks_.at(i));
+        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+//        PolynomialFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
     }

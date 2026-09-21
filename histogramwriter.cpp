@@ -16,10 +16,10 @@ HistogramWriter &HistogramWriter::addHist(TH1D *hist) {
     return *this;
 }
 
-HistogramWriter &HistogramWriter::addHists(const std::vector<TH1D *> &hists) {
+HistogramWriter &HistogramWriter::addHists(const std::vector<std::unique_ptr<TH1D>> &hists) {
     for (const auto &hist : hists) {
         if (hist && hist->Integral() > std::numeric_limits<double>::epsilon()) {
-            hists_.push_back(hist);
+            hists_.push_back(hist.get());
         }
     }
     return *this;

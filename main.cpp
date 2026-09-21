@@ -88,12 +88,13 @@ int main(int argc, char *argv[])
 
     const std::string internalEnergyPeaksFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
 //    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep_silicon.root"};
-    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep.root"};
-    calibration.process(internalEnergyPeaksFileName);
+    const std::string externalEnergyPeaksFileName{"results/sahar_2_ep.root"};
+    calibration.process(internalEnergyPeaksFileName, externalEnergyPeaksFileName);
+//    calibration.process(internalEnergyPeaksFileName);
     stop = std::chrono::steady_clock::now();
     HistogramWriter histogramWriter;
     histogramWriter.addHist(histogramManager.histEnergyTotal());
-//    histogramWriter.addHists(histogramManager.histsEnergyByGamma());
+    histogramWriter.addHists(histogramManager.histsEnergyByGamma());
 //    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
 //    histogramWriter.addHists(histogramManager.histsAmpByGamma());
 //    histogramWriter.addHists(histogramManager.histsAmpByGammaRc());

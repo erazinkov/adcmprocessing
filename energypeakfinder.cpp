@@ -45,9 +45,9 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
                 EnergyPeak{EnergyPeak::Id::FE847, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
-               // EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
+                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
-                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
+//                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
@@ -82,28 +82,9 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
         peaks.at(i).setChannel(peakPos.pos);
         peaks.at(i).setChannelErr(peakPos.err);
         graphPolN.SetPoint(i, peakPos.pos, peaks.at(i).energy());
-        // graphPolN.SetPointError(i, peakPos.err, TMath::Sqrt(peaks.at(i).energy()) * 1.2);
+        graphPolN.SetPointError(i, peakPos.err, TMath::Sqrt(peaks.at(i).energy()) * 1.2);
         fitGraph();
     }
-    // for (size_t i{0}; i < peaks.size(); i++) {
-    //     if (hist) {
-    //         auto listOfFunctions{hist->GetListOfFunctions()};
-    //         for (auto *item : *listOfFunctions) {
-    //             // std::cout << item->GetName() << std::endl;
-    //             // item->Delete();
-    //         }
-    //     }
-    //     if (histRc) {
-    //         auto listOfFunctionsRc{histRc->GetListOfFunctions()};
-    //         for (auto *item : *listOfFunctionsRc) {
-    //             // std::cout << item->GetName() << std::endl;
-    //             // item->Delete();
-    //         }
-    //     }
-    //     auto peakPos{findPeakPosFunctions_.at(peaks.at(i).id())(hist, histRc)};
-    //     peaks.at(i).setChannel(peakPos);
-    // }
-
 //    peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [](const EnergyPeak& p) {
 //        return p.id() == EnergyPeak::Id::HYDROGEN;
 //    }
@@ -144,11 +125,90 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
 
 }
 
-void EnergyPeakFinder::processRaw(TH1D *hist)
+void EnergyPeakFinder::processExternal(TH1D *hist, TH1D * histRc)
 {
-    auto binMax{hist->GetMaximumBin()};
-    auto xMax{hist->GetBinCenter(hist->GetBin(binMax))};
-    energyPeak_ = EnergyPeak(EnergyPeak::Id::FE847, xMax);
+    energyPeaks_.clear();
+    fCalib_->SetParameters(0.0, 1.0, 0.0);
+    TVirtualFitter::SetDefaultFitter("Minuit");
+
+    std::vector<EnergyPeak> peaks{
+        EnergyPeak{EnergyPeak::Id::FE847, 0.0},
+        EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
+        EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
+//        EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
+//                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
+//                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
+        EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
+        EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
+    };
+
+    auto fe847PosApprox{findPeakPosFerrum847Approx(histRc)};
+
+    offset_ = 0.0;
+    calib_ = EnergyPeak::energyById(EnergyPeak::Id::FE847) / fe847PosApprox;
+    fCalib_->SetParameter(1, EnergyPeak::energyById(EnergyPeak::Id::FE847) / fe847PosApprox);
+
+    TGraphErrors graphPolN;
+
+    auto fitGraph = [&](){
+        auto n{graphPolN.GetN()};
+        if (n == 0 || n == 1) {
+            return;
+        }
+        if (n == 2) {
+            fCalib_->ReleaseParameter(0);
+            fCalib_->ReleaseParameter(1);
+            fCalib_->FixParameter(2, 0.0);
+        } else {
+            fCalib_->ReleaseParameter(0);
+            fCalib_->ReleaseParameter(1);
+            fCalib_->ReleaseParameter(2);
+        }
+        graphPolN.Fit(fCalib_.get(), "RQN0");
+    };
+
+    for (size_t i{0}; i < peaks.size(); i++) {
+        auto peakPos{findPeakPosFunctions_.at(peaks.at(i).id())(hist, histRc)};
+        peaks.at(i).setChannel(peakPos.pos);
+        peaks.at(i).setChannelErr(peakPos.err);
+        graphPolN.SetPoint(i, peakPos.pos, peaks.at(i).energy());
+//        graphPolN.SetPointError(i, peakPos.err, TMath::Sqrt(peaks.at(i).energy()) * 1.2);
+        fitGraph();
+    }
+//    peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [](const EnergyPeak& p) {
+//        return p.id() == EnergyPeak::Id::HYDROGEN;
+//    }
+//    ),peaks.end());
+
+    std::sort(peaks.begin(), peaks.end());
+
+    energyPeaks_ = std::move(peaks);
+}
+
+void EnergyPeakFinder::processExternal(const std::vector<EnergyPeak> &energyPeaksInternal, std::vector<EnergyPeak> &energyPeaksExternal)
+{
+    energyPeaks_.clear();
+    TGraphErrors graphPolN;
+    for (size_t i{0}, j{0}; i < energyPeaksInternal.size(); i++) {
+        auto id{energyPeaksInternal.at(i).id()};
+        auto it{
+            std::find_if(energyPeaksExternal.begin(), energyPeaksExternal.end(),
+                         [id](const EnergyPeak& p) { return p.id() == id; })
+        };
+        if (it != energyPeaksExternal.end()) {
+            graphPolN.SetPoint(j, (*it).channel(), energyPeaksInternal.at(i).channel());
+            std::cout << i << " " << j << " " <<  (*it).channel() << " " << energyPeaksInternal.at(i).channel() << std::endl;
+            j++;
+        }
+    }
+//    std::unique_ptr<TF1> f{std::make_unique<TF1>("f", "[0]+[1]*x+[2]*x*x", 0.0, 4.0e3)};
+    std::unique_ptr<TF1> f{std::make_unique<TF1>("f", "[0]*TMath::Power(x+[2],[1])", 0.0, 4.0e3)};
+    f->SetParameters(1.0, 1.0, 0.0);
+    graphPolN.Fit(f.get(), "RN0");
+    for (size_t i{0}; i < energyPeaksExternal.size(); i++) {
+        auto c{f.get()->Eval(energyPeaksExternal.at(i).channel())};
+        energyPeaksExternal.at(i).setChannel(c);
+    }
 }
 
 double EnergyPeakFinder::findPeakPosFerrum847Approx(TH1 *h)

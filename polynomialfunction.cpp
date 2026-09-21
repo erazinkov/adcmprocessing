@@ -11,8 +11,7 @@ PolynomialFunction::PolynomialFunction(const std::vector<EnergyPeak> &energyPeak
 PolynomialFunction::Par PolynomialFunction::par(const std::vector<EnergyPeak> &energyPeaks)
 {
     Par par;
-    // TF1 f("f", "pol3" , energyPeaks.front().channel(),  energyPeaks.back().channel());
-    TF1 f("f", "pol3" , 0.0,  4'000.0);
+    TF1 f("f", "pol3" , energyPeaks.front().channel(),  energyPeaks.back().channel());
     TGraphErrors g(static_cast<int>(energyPeaks.size()));
 
     for (size_t i{0}; i < energyPeaks.size(); ++i) {

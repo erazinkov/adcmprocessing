@@ -14,7 +14,8 @@ public:
     ~EnergyPeakFinder();
     void process(TH1D *hist, TH1D * histRc);
     void check(TH1D *hist, TH1D * histRc);
-    void processRaw(TH1D *hist);
+    void processExternal(TH1D *hist, TH1D * histRc);
+    void processExternal(const std::vector<EnergyPeak> &energyPeaksInternal, std::vector<EnergyPeak> &energyPeaksExternal);
     const std::vector<EnergyPeak> &energyPeaks() const;
 
     const EnergyPeak &energyPeak() const;
