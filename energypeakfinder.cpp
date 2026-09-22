@@ -11,6 +11,8 @@
 #include <functional>
 #include <iomanip>
 
+#include <fstream>
+
 EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
 {
     fCalib_ = std::make_unique<TF1>("fCalib_", "[0]+[1]*x+[2]*x*x", 0.0, 8.0e3);
@@ -91,6 +93,17 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
 //    ),peaks.end());
 
     std::sort(peaks.begin(), peaks.end());
+
+    std::ofstream ofs("pp.txt", std::ios::out | std::ios::app);
+    if (ofs.is_open()) {
+        for (size_t i{0}; i < peaks.size() - 1; i++) {
+            ofs << peaks.at(i + 1).channel() - peaks.at(i).channel() << " ";
+        }
+        ofs << std::endl;
+        ofs.close();
+    }
+
+
 
     energyPeaks_ = std::move(peaks);
 }
