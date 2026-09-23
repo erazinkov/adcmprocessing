@@ -49,7 +49,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
-                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
+//                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
@@ -88,15 +88,19 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
         fitGraph();
     }
 
+//    for (const auto &p : peaks) {
+//        std::cout << p.channel() << " " << p.energy() << std::endl;
+//    }
+
     std::vector<EnergyPeak::Id> excludePeaks{
-        EnergyPeak::Id::FE847,
-        EnergyPeak::Id::FE1238,
-//        EnergyPeak::Id::HYDROGEN,
-        EnergyPeak::Id::CARBON,
-        EnergyPeak::Id::SILICON,
-//        EnergyPeak::Id::OXYGENADD,
-//        EnergyPeak::Id::OXYGEN,
-        EnergyPeak::Id::FE7631,
+//        EnergyPeak::Id::FE847,
+//        EnergyPeak::Id::FE1238,
+////        EnergyPeak::Id::HYDROGEN,
+//        EnergyPeak::Id::CARBON,
+//        EnergyPeak::Id::SILICON,
+////        EnergyPeak::Id::OXYGENADD,
+////        EnergyPeak::Id::OXYGEN,
+//        EnergyPeak::Id::FE7631,
     };
 
 
@@ -111,9 +115,9 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
 
     std::sort(peaks.begin(), peaks.end());
 
-    for (const auto &p : peaks) {
-        std::cout << p.energy() << " " << p.channel() << std::endl;
-    }
+//    for (const auto &p : peaks) {
+//        std::cout << p.energy() << " " << p.channel() << std::endl;
+//    }
 
 
 //    std::ofstream ofs("pp.txt", std::ios::out | std::ios::app);
@@ -136,13 +140,13 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
     TVirtualFitter::SetDefaultFitter("Minuit");
 
     std::vector<EnergyPeak> peaks{
-//                                   EnergyPeak{EnergyPeak::Id::FE847, 0.0},
-//                                   EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
+                                   EnergyPeak{EnergyPeak::Id::FE847, 0.0},
+                                   EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
                                    EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                                   EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                                  EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
                                   EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
-//                                  EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
+                                  EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
                                   };
 
 

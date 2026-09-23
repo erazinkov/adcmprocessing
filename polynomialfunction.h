@@ -4,13 +4,15 @@
 #include "energypeak.h"
 #include <vector>
 #include <cmath>
+#include "TF1.h"
 
 class PolynomialFunction
 {
 public:
     PolynomialFunction(const std::vector<EnergyPeak> &energyPeaks);
 
-    double operator() (double *x, double *) {
+
+   double operator() (double *x, double *) {
        double arg{x[0]};
        double val{0.0};
        for (size_t i{0}; i < _par.p.size(); ++i) {
