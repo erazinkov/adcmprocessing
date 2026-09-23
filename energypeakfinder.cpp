@@ -49,7 +49,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
-//                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
+                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
@@ -87,21 +87,43 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
         graphPolN.SetPointError(i, peakPos.err, TMath::Sqrt(peaks.at(i).energy()) * 1.2);
         fitGraph();
     }
-//    peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [](const EnergyPeak& p) {
-//        return p.id() == EnergyPeak::Id::HYDROGEN;
-//    }
-//    ),peaks.end());
+
+    std::vector<EnergyPeak::Id> excludePeaks{
+        EnergyPeak::Id::FE847,
+        EnergyPeak::Id::FE1238,
+//        EnergyPeak::Id::HYDROGEN,
+        EnergyPeak::Id::CARBON,
+        EnergyPeak::Id::SILICON,
+//        EnergyPeak::Id::OXYGENADD,
+//        EnergyPeak::Id::OXYGEN,
+        EnergyPeak::Id::FE7631,
+    };
+
+
+    for (const auto &eP : excludePeaks) {
+        peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [&eP](const EnergyPeak& p) {
+            return p.id() == eP;
+        }
+        ),peaks.end());
+    }
+
+
 
     std::sort(peaks.begin(), peaks.end());
 
-    std::ofstream ofs("pp.txt", std::ios::out | std::ios::app);
-    if (ofs.is_open()) {
-        for (size_t i{0}; i < peaks.size() - 1; i++) {
-            ofs << peaks.at(i + 1).channel() - peaks.at(i).channel() << " ";
-        }
-        ofs << std::endl;
-        ofs.close();
+    for (const auto &p : peaks) {
+        std::cout << p.energy() << " " << p.channel() << std::endl;
     }
+
+
+//    std::ofstream ofs("pp.txt", std::ios::out | std::ios::app);
+//    if (ofs.is_open()) {
+//        for (size_t i{0}; i < peaks.size() - 1; i++) {
+//            ofs << peaks.at(i + 1).channel() - peaks.at(i).channel() << " ";
+//        }
+//        ofs << std::endl;
+//        ofs.close();
+//    }
 
 
 
@@ -114,9 +136,9 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
     TVirtualFitter::SetDefaultFitter("Minuit");
 
     std::vector<EnergyPeak> peaks{
-                                   EnergyPeak{EnergyPeak::Id::FE847, 0.0},
-                                   EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
-//                                   EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
+//                                   EnergyPeak{EnergyPeak::Id::FE847, 0.0},
+//                                   EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
+                                   EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                                   EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                                  EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
                                   EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
