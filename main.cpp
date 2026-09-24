@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
     HistogramPainter::paintHists(histogramManager.histsAmpByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_rc" + ".pdf");
     HistogramPainter::paintHists(histogramManager.histsEnergyByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_sg" + ".pdf");
      HistogramPainter::paintHists(histogramManager.histsEnergyByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_rc" + ".pdf");
+     HistogramPainter::paintHists(histogramManager.histsTimeCorrectedByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t_c_ec" + ".pdf");
 
     auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 

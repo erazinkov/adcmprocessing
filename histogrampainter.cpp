@@ -33,7 +33,9 @@ void HistogramPainter::paintHists(const std::vector<std::unique_ptr<TH1D>> &hist
     for (size_t ig{0}; ig < hists.size(); ++ig) {
         if (hists.at(ig)) {
             gPad->SetGrid();
+//            hists.at(ig)->Rebin(4);
 //            hists.at(ig)->GetXaxis()->SetRangeUser(1'500.0, 3'000.0);
+//            hists.at(ig)->GetXaxis()->SetRangeUser(-100.0, 100.0);
             hists.at(ig)->SetStats(false);
             hists.at(ig)->Draw();
             auto listOfFunctions{hists.at(ig)->GetListOfFunctions()};

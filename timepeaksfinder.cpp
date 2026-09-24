@@ -8,7 +8,7 @@ TimePeaksFinder::TimePeaksFinder()
 {
 }
 
-double TimePeaksFinder::calculatePeakPos(TH1 *hist)
+double TimePeaksFinder::calculateObjPeakPos(TH1 *hist)
 {
     gErrorIgnoreLevel = 3'000;
     gStyle->SetOptFit(1111);
@@ -90,8 +90,115 @@ double TimePeaksFinder::calculatePeakPos(TH1 *hist)
     timePeakPos = f->GetParameter(1);
 //    timePeakPos = xMax;
 
-//    delete f;
-//    f = nullptr;
+    gErrorIgnoreLevel = 0;
+
+    return timePeakPos;
+}
+
+double TimePeaksFinder::calculateBoxPeakPos(TH1 *hist)
+{
+    gErrorIgnoreLevel = 3'000;
+    gStyle->SetOptFit(1111);
+    auto timePeakPos{0.0};
+
+    auto binMax{hist->GetMaximumBin()};
+    auto xMax{hist->GetBinCenter(hist->GetBin(binMax))};
+    auto rcAmp{hist->GetBinContent(hist->GetXaxis()->FindBin(xMax - 25.0))};
+    auto obPeakAmp{hist->GetBinContent(binMax) - rcAmp};
+    auto boxPeakAmp{0.25 * obPeakAmp};
+    auto snPeakAmp{0.5 * obPeakAmp};
+
+    auto ff = [] (double *x, double *par) {
+       double arg_1{0.0}, arg_2{0.0}, arg_3{0.0};
+       if (par[2] != 0.0 && par[5] != 0.0 && par[7] != 0.0)
+       {
+           arg_1 = ( x[0] - par[1] ) / par[2];
+           arg_2 = ( x[0] - ( par[1] + par[4] ) ) / par[5];
+           arg_3 = ( x[0] - ( par[1] + par[6] ) ) / par[7];
+       }
+
+       double fitval{
+           par[0] * TMath::Exp( -0.5 * arg_1 * arg_1 ) +
+           par[3] * TMath::Exp( -0.5 * arg_2 * arg_2 ) +
+           par[8] * TMath::Exp( -0.5 * arg_3 * arg_3 ) +
+           par[9] + par[10] * x[0]
+       };
+
+       return fitval;
+   };
+
+    std::unique_ptr<TF1> f{std::make_unique<TF1>("f", ff, xMax - 25.0, xMax + 25.0, 10)};
+
+    // object
+    f->SetParameter(0, obPeakAmp);
+    f->SetParameter(1, xMax);
+    f->SetParameter(2, 0.5 * ( 1.5 + 3.0 ));
+    // sn
+    f->SetParameter(3, 0.05 * obPeakAmp);
+    // 4 ?
+    f->SetParameter(5, 2.5);
+    // box
+    f->SetParameter(6, -10.0);
+    f->SetParameter(7, 2.5);
+    f->SetParameter(8, boxPeakAmp);
+    // bg
+    f->SetParameter(9, rcAmp);
+    f->FixParameter(10, 0.0);
+
+    // object
+    f->SetParLimits(1, 0.9 * xMax, 1.1 * xMax);
+    f->SetParLimits(2, 1.5, 3.0);
+    // sn
+    f->SetParLimits(3, 0.0, snPeakAmp);
+    f->SetParLimits(4, 5.0, 20.0);
+    f->SetParLimits(5, 2.0, 7.0);
+    // box
+    f->SetParLimits(6, -15.0, -7.5);
+    f->SetParLimits(7, 2.25, 2.75);
+    f->SetParLimits(8, 0.0, 0.5 * obPeakAmp);
+
+    hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 75.0, f->GetParameter(1) + 75.0);
+
+    hist->Fit(f.get(), "RQN0");
+
+    auto fff = [](double *x, double *par){
+        double arg{0};
+        if (par[2] != 0.0)
+        {
+            arg = ( x[0] - par[1] ) / par[2];
+        }
+        double fitval{par[0] * TMath::Exp(-0.5 * arg * arg) + par[3] + par[4] * x[0]};
+        return fitval;
+    };
+
+    TF1 *fOb{new TF1("fOb", fff, xMax - 25.0, xMax + 25.0, 5)};
+    fOb->SetParameters(f->GetParameter(0),
+                       f->GetParameter(1),
+                       f->GetParameter(2),
+                       f->GetParameter(9),
+                       f->GetParameter(10));
+    fOb->SetLineColor(kGreen);
+    TF1 *fSn{new TF1("fSn", fff, xMax - 25.0, xMax + 25.0, 5)};
+    fSn->SetParameters(f->GetParameter(3),
+                       f->GetParameter(1) + f->GetParameter(4),
+                       f->GetParameter(5),
+                       f->GetParameter(9),
+                       f->GetParameter(10));
+    fSn->SetLineColor(kBlue);
+    TF1 *fBox{new TF1("fBox", fff, xMax - 25.0, xMax + 25.0, 5)};
+    fBox->SetParameters(f->GetParameter(8),
+                       f->GetParameter(1) + f->GetParameter(6),
+                       f->GetParameter(7),
+                       f->GetParameter(9),
+                       f->GetParameter(10));
+    fBox->SetLineColor(kMagenta);
+
+    hist->GetListOfFunctions()->Add(fOb);
+    hist->GetListOfFunctions()->Add(fSn);
+    hist->GetListOfFunctions()->Add(fBox);
+
+    timePeakPos = f->GetParameter(1) + f->GetParameter(6);
+//    timePeakPos = xMax;
 
     gErrorIgnoreLevel = 0;
 

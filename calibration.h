@@ -53,7 +53,7 @@ private:
     void fillHistEnergy(const std::vector<dec_ev_t> &events, TH1 *h, double minT, double maxT, bool exclude, TF1 f);
 
     void fillHistsTimeByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists, bool isCorrected = false);
-    void fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);
+    void fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists, bool isCorrected = false);
     void fillHistTimeWithEnergyCutTotal(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);
     void fillHistsTimeWithEnergyCutByGamma(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);
     void fillHistsTimeByAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>>> &hists);

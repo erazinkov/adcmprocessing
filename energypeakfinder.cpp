@@ -50,8 +50,8 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
 //                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
-                EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
-                EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
+//                EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
+//                EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
 
     auto fe847PosApprox{findPeakPosFerrum847Approx(histRc)};

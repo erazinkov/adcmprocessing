@@ -26,12 +26,10 @@ void Calibration::process(const std::string &internalEnergyPeaksFileName, const 
 
     fillHistsTimeByGammaAlpha(histogramManager_->histsTimeByGammaAlpha(), false);
 
-    const auto igMax = std::min(histogramManager_->histsTimeByGammaAlpha().size(), channels_.g.size());
-    const auto iaMax = std::min(histogramManager_->histsTimeByGammaAlpha().at(0).size(), channels_.a.size());
-    for (size_t ig{0}; ig < igMax; ++ig) {
-        for (size_t ia{0}; ia <  iaMax; ++ia) {
+    for (size_t ig{0}; ig < std::min(histogramManager_->histsTimeByGammaAlpha().size(), channels_.g.size()); ++ig) {
+        for (size_t ia{0}; ia <  std::min(histogramManager_->histsTimeByGammaAlpha().at(0).size(), channels_.a.size()); ++ia) {
             std::pair<uint8_t, uint8_t> p{ig, ia};
-            timeCorrections_[p] = TimePeaksFinder::calculatePeakPos(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia).get());
+            timeCorrections_[p] = TimePeaksFinder::calculateObjPeakPos(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia).get());
         }
     }
 
@@ -69,20 +67,37 @@ void Calibration::process(const std::string &internalEnergyPeaksFileName, const 
     }
 
 
-    fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
-    fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
-  for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-      energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i).get(), histogramManager_->histsEnergyByGammaRc().at(i).get());
-  }
+//    fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
+//    fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
+//  for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+//      energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i).get(), histogramManager_->histsEnergyByGammaRc().at(i).get());
+//  }
     // !
 
 //    ResolutionProcessing rP;
 //    rP.processingEnergy(AppConstants::OUTPUT_PATH + fileName_, histogramManager_->histsEnergyByGamma(), channels_.g.size());
-    fillHistsEnergyByAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
+//    fillHistsEnergyByAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg());
 //    fillHistsTimeByAlpha(histogramManager_->histsTimeCorrectedByGammaAlpha());
 
-//    fillHistsTimeWithEnergyCutByGammaAlpha(histogramManager_->histsTimeByGammaAlpha());
-//    fillHistsTimeWithEnergyCutByGamma(histogramManager_->histsTimeByGammaAlpha());
+    fillHistsTimeWithEnergyCutByGammaAlpha(histogramManager_->histsTimeByGammaAlpha(), true);
+
+    fillHistsTimeWithEnergyCutByGamma(histogramManager_->histsTimeByGammaAlpha());
+    auto timeCorrectionsBox{timeCorrections_};
+    for (size_t ig{0}; ig < std::min(histogramManager_->histsTimeByGammaAlpha().size(), channels_.g.size()); ++ig) {
+        auto timeCorrectionBox{TimePeaksFinder::calculateBoxPeakPos(histogramManager_->histsTimeCorrectedByGamma().at(ig).get())};
+        std::cout << "timeCorrectionBox" << " " << ig << " " << timeCorrectionBox << std::endl;
+        for (size_t ia{0}; ia <  std::min(histogramManager_->histsTimeByGammaAlpha().at(0).size(), channels_.a.size()); ++ia) {
+            std::pair<uint8_t, uint8_t> p{ig, ia};
+            timeCorrectionsBox[p] += timeCorrectionBox;
+        }
+    }
+
+    timeCorrections_ = timeCorrectionsBox;
+
+    fillHistsAmpByGammaAlpha(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
+
+    fillHistsAmpByGamma(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
+
 //    rP.processingTime(AppConstants::OUTPUT_PATH + fileName_, histogramManager_->histsTimeCorrectedByGamma(), channels_.g.size());
 //    rP.exportToCSV(AppConstants::OUTPUT_PATH + fileName_);
 
@@ -107,7 +122,7 @@ void Calibration::fillHistsTimeByGammaAlpha(const std::vector<std::vector<std::u
     tasks.clear();
 }
 
-void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &hists)
+void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::vector<std::unique_ptr<TH1D>> > &hists, bool isCorrected)
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i) {
@@ -119,15 +134,15 @@ void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::
     std::vector<std::function<void()>> tasks;
     for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i) {
         for (size_t j{0}; j <  std::min(hists.size(), channels_.a.size()); ++j) {
-            tasks.push_back([this, &hists, i, j, &fs](){
+            tasks.push_back([this, &hists, i, j, isCorrected, &fs](){
                 hists.at(i).at(j)->Reset();
                 std::pair<uint8_t, uint8_t> p{*std::next(channels_.g.begin(), i), *std::next(channels_.a.begin(), j)};
                 if (events_m_.find(p) != events_m_.end()) {
                     fillHistTimeWithEnergyCut(events_m_.at(p),
                                               hists.at(i).at(j).get(),
-                                              timeCorrections_.at({i, j}),
-                                              4438.0 - 250.0,
-                                              4438.0 + 250.0,
+                                              isCorrected ? timeCorrections_[{i, j}] : 0.0,
+                                              4438.0 - 2.0 * 250.0,
+                                              4438.0 + 2.0 * 250.0,
                                               fs.at(i));
                 }
             });
