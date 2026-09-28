@@ -20,6 +20,7 @@ SOURCES += \
         piecewiselinearfunction.cpp \
         polynomialfunction.cpp \
         resolutionprocessing.cpp \
+        saturationfunction.cpp \
         timepeaksfinder.cpp
 
 
@@ -42,6 +43,7 @@ HEADERS += \
         polynomialfunction.h \
         progressbar.h \
         resolutionprocessing.h \
+        saturationfunction.h \
         spinner.h \
         timepeaksfinder.h \
         utils.h

@@ -47,7 +47,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
                 EnergyPeak{EnergyPeak::Id::FE847, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
-//                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
+                EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
@@ -84,13 +84,13 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
         peaks.at(i).setChannel(peakPos.pos);
         peaks.at(i).setChannelErr(peakPos.err);
         graphPolN.SetPoint(i, peakPos.pos, peaks.at(i).energy());
-        graphPolN.SetPointError(i, peakPos.err, TMath::Sqrt(peaks.at(i).energy()) * 1.2);
+//        graphPolN.SetPointError(i, peakPos.err, TMath::Sqrt(peaks.at(i).energy()) * 1.2);
         fitGraph();
     }
 
-//    for (const auto &p : peaks) {
-//        std::cout << p.channel() << " " << p.energy() << std::endl;
-//    }
+    for (const auto &p : peaks) {
+        std::cout << p.channel() << " " << p.energy() << std::endl;
+    }
 
     std::vector<EnergyPeak::Id> excludePeaks{
 //        EnergyPeak::Id::FE847,
@@ -144,9 +144,9 @@ void EnergyPeakFinder::check(TH1D *hist, TH1D *histRc)
                                    EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
                                    EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                                   EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
-//                                  EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
+                                  EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
                                   EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
-                                  EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
+//                                  EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
                                   };
 
 
@@ -243,7 +243,7 @@ void EnergyPeakFinder::processExternal(const std::vector<EnergyPeak> &energyPeak
 //    std::unique_ptr<TF1> f{std::make_unique<TF1>("f", "[0]+[1]*x+[2]*x*x", 0.0, 4.0e3)};
     std::unique_ptr<TF1> f{std::make_unique<TF1>("f", "[0]*TMath::Power(x+[2],[1])", 0.0, 4.0e3)};
     f->SetParameters(1.0, 1.0, 0.0);
-    graphPolN.Fit(f.get(), "RN0");
+    graphPolN.Fit(f.get(), "RQN0");
     for (size_t i{0}; i < energyPeaksExternal.size(); i++) {
         auto c{f.get()->Eval(energyPeaksExternal.at(i).channel())};
         energyPeaksExternal.at(i).setChannel(c);
@@ -519,13 +519,13 @@ EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosSilicon(TH1 *h, const dou
 //    f.SetParLimits(2, 0.25 * sigma, 1.75 * sigma);
     h->Fit("f","RQN0");
 
-    pos = f.GetParameter(1);
-    xL = pos - 3.0 * sigma;
-    xR = pos + 3.0 * sigma;
-    yL = y(h, xL);
-    yR = y(h, xR);
-    f.SetRange(xL, xR);
-    h->Fit("f", "RQN0");
+//    pos = f.GetParameter(1);
+//    xL = pos - 3.0 * sigma;
+//    xR = pos + 3.0 * sigma;
+//    yL = y(h, xL);
+//    yR = y(h, xR);
+//    f.SetRange(xL, xR);
+//    h->Fit("f", "RQN0");
 
     TF1 *fP{new TF1("fP", "gaus(0) + pol1(3)", xL, xR)};
     fP->SetLineColor(kOrange);

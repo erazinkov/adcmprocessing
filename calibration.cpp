@@ -1,7 +1,8 @@
 #include "calibration.h"
 #include "utils.h"
-#include "piecewiselinearfunction.h"
+//#include "piecewiselinearfunction.h"
 //#include "polynomialfunction.h"
+#include "saturationfunction.h"
 #include "timepeaksfinder.h"
 #include "resolutionprocessing.h"
 
@@ -57,23 +58,23 @@ void Calibration::process(const std::string &internalEnergyPeaksFileName, const 
 
     } else {
         std::cout << "Use" << std::string(RED) + " external " + RESET + "energy peaks positions" << std::endl;
-        std::vector<std::vector<EnergyPeak>> energyPeaks;
-        for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-            energyPeakFinder_.processExternal(histogramManager_->histsAmpByGamma().at(i).get(), histogramManager_->histsAmpByGammaRc().at(i).get());
-            energyPeaks.push_back(energyPeakFinder_.energyPeaks());
-        }
+//        std::vector<std::vector<EnergyPeak>> energyPeaks;
+//        for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+//            energyPeakFinder_.processExternal(histogramManager_->histsAmpByGamma().at(i).get(), histogramManager_->histsAmpByGammaRc().at(i).get());
+//            energyPeaks.push_back(energyPeakFinder_.energyPeaks());
+//        }
         loadEnergyPeaks(externalEnergyPeaksFileName);
-        for (size_t i{0}; i < energyPeaks.size(); i++) {
-            energyPeakFinder_.processExternal(energyPeaks.at(i), energyPeaks_.at(i));
-        }
+//        for (size_t i{0}; i < energyPeaks.size(); i++) {
+//            energyPeakFinder_.processExternal(energyPeaks.at(i), energyPeaks_.at(i));
+//        }
     }
 
 
     fillHistsEnergyByGammaAlpha(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
     fillHistsEnergyByGamma(histogramManager_->histsEnergyByGammaAlphaSg(), histogramManager_->histsEnergyByGammaAlphaBg(), histogramManager_->histsEnergyByGammaAlphaRc());
-  for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
-      energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i).get(), histogramManager_->histsEnergyByGammaRc().at(i).get());
-  }
+//  for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+//      energyPeakFinder_.check(histogramManager_->histsEnergyByGamma().at(i).get(), histogramManager_->histsEnergyByGammaRc().at(i).get());
+//  }
     // !
 
 //    ResolutionProcessing rP;
@@ -111,8 +112,9 @@ void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i) {
-        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+//        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
 //        PolynomialFunction fObj(energyPeaks_.at(i));
+        SaturationFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
     }
@@ -278,8 +280,9 @@ void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std:
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
-        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+//        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
 //        PolynomialFunction fObj(energyPeaks_.at(i));
+        SaturationFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
     }
