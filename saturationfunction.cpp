@@ -26,13 +26,16 @@ SaturationFunction::Par SaturationFunction::par(const std::vector<EnergyPeak> &e
     }
     std::sort(nodes_.begin(), nodes_.end());
 
+
+
     std::vector<double> xx{
     284.583,
     415.76 ,
     733.577,
     1412.52,
-    1891.06,
-    2274.95,
+    1746.28,
+    1890.82,
+    2274.8,
     };
 
     std::vector<double> y{
@@ -40,6 +43,7 @@ SaturationFunction::Par SaturationFunction::par(const std::vector<EnergyPeak> &e
     1238.0,
     2223.0,
     4438.0,
+    5618.0,
     6129.0,
     7638.35,
     };
@@ -50,7 +54,7 @@ SaturationFunction::Par SaturationFunction::par(const std::vector<EnergyPeak> &e
     };
 
     TGraph gr1(nodes.size(), &xx[0], &nodes[0]);
-    f_ = new TF1("f", "[0]+[1]*x", xx.front(), xx.back());
+    f_ = new TF1("f", "[0]+[1]*x+[2]*x*x", xx.front(), xx.back());
     gr1.Fit(f_, "RQN0");
 
     TGraph gr(xx.size(), xx.data(), y.data());

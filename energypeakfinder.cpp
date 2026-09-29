@@ -49,7 +49,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
                 EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
-//                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
+                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
@@ -91,6 +91,7 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     for (const auto &p : peaks) {
         std::cout << p.channel() << " " << p.energy() << std::endl;
     }
+
 
     std::vector<EnergyPeak::Id> excludePeaks{
 //        EnergyPeak::Id::FE847,
