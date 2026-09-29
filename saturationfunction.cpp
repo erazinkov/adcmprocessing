@@ -10,6 +10,14 @@ SaturationFunction::SaturationFunction(const std::vector<EnergyPeak> &energyPeak
     _par = par(energyPeaks);
 }
 
+//SaturationFunction::~SaturationFunction()
+//{
+//    if (spline_) {
+//        delete spline_;
+//        spline_ = nullptr;
+//    }
+//}
+
 SaturationFunction::Par SaturationFunction::par(const std::vector<EnergyPeak> &energyPeaks)
 {
 
@@ -17,6 +25,44 @@ SaturationFunction::Par SaturationFunction::par(const std::vector<EnergyPeak> &e
         nodes_.push_back(energyPeaks.at(i).channel());
     }
     std::sort(nodes_.begin(), nodes_.end());
+
+    std::vector<double> xx{
+    284.583,
+    415.76 ,
+    733.577,
+    1412.52,
+    1891.06,
+    2274.95,
+    };
+
+    std::vector<double> y{
+        847.0,
+    1238.0,
+    2223.0,
+    4438.0,
+    6129.0,
+    7638.35,
+    };
+    std::vector<double> nodes{
+                nodes_.at(0),
+                nodes_.at(1),
+                nodes_.at(2)
+    };
+
+    TGraph gr1(nodes.size(), &xx[0], &nodes[0]);
+    f_ = new TF1("f", "[0]+[1]*x", xx.front(), xx.back());
+    gr1.Fit(f_, "RQN0");
+
+    TGraph gr(xx.size(), xx.data(), y.data());
+    spline_ = new TSpline3("sp", &gr);
+
+    double p1 =  (xx.at(1) - xx.at(0)) / (nodes_.at(1) - nodes_.at(0));
+    double p0 = xx.at(1) - p1 * nodes_.at(1);
+
+    std::cout << "reference: " << xx.at(0) << " " << "current: " << nodes_.at(0) << std::endl;
+    std::cout << "reference: " << xx.at(1) << " " << "current: " << nodes_.at(1) << std::endl;
+    std::cout << "p0: " << f_->GetParameter(0) << " " << "p1: " << f_->GetParameter(1) << std::endl;
+
     TVirtualFitter::SetDefaultFitter("Minuit");
     Par par;
 //    auto ff = [] (double *x, double *par) {
