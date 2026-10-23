@@ -14,7 +14,7 @@ Decoder::Decoder()
 {
 }
 
-void Decoder::process(const std::string &filePath)
+void Decoder::process(const std::string &filePath, const long long &time)
 {
     ifs_.open(filePath, std::ios::in | std::ios::binary);
     if (!ifs_.is_open())
@@ -41,6 +41,24 @@ void Decoder::process(const std::string &filePath)
     stor_puls_t *g{new stor_puls_t()};
     stor_puls_t *a{new stor_puls_t()};
 
+    auto isIntegerOverflow = [](long long int prevTs, long long int nextTs,  long long int limit = 3'000'000'000){
+        return std::abs(nextTs - prevTs) > limit;
+    };
+
+    struct Detector {
+        uint8_t index;  // detector index
+        float amp;      // detector amplitude
+        float t;          // time in ns
+    };
+
+    struct Event {
+        long long int ts;   // timestamp, 10 ns step
+        Detector g;
+        Detector a;
+    };
+
+    std::vector<Event> spillEvents;
+
     while (ifs_)
     {
         ifs_ >> hdr;
@@ -50,6 +68,7 @@ void Decoder::process(const std::string &filePath)
             currentPosition = static_cast<u_int64_t>(ifs_.tellg());
             ifs_ >> cmap;
             ProgressBar<u_int64_t>::show(currentPosition, size);
+            spillEvents.clear();
             continue;
         }
         if (hdr.id == STOR_ID_EVNT && hdr.size > sizeof(stor_packet_hdr_t))
@@ -60,7 +79,12 @@ void Decoder::process(const std::string &filePath)
                 case 2:
                 {
                     ifs_ >> *g >> *a;
-                    events_[{g->ch, a->ch}].emplace_back(dec_ev_t{g->t - a->t, g->a});
+//                    events_[{g->ch, a->ch}].emplace_back(dec_ev_t{g->t - a->t, g->a});
+                    spillEvents.push_back({
+                                              ev.ts,
+                                              {g->ch, g->a, g->t},
+                                              {a->ch, a->a, a->t}
+                                          });
                     break;
                 }
                 default:
@@ -81,6 +105,35 @@ void Decoder::process(const std::string &filePath)
             ifs_ >> counters;
             if (!counters.n) {
                 continue;
+            }
+            if (spillEvents.size()) {
+                for (size_t i{1}; i < spillEvents.size(); ++i) {
+                    if (isIntegerOverflow(spillEvents[0].ts, spillEvents[i].ts) && spillEvents.size()) {
+                        spillEvents[i].ts += UINT32_MAX;
+                    }
+                }
+                auto tsOffset{spillEvents[0].ts};
+                for (size_t i{0}; i < spillEvents.size(); ++i) {
+                    spillEvents[i].ts -= tsOffset;
+                }
+                for (size_t i{0}; i < spillEvents.size(); ++i) {
+//                    auto dateInNanoSec{time + time_ + spillEvents[i].ts * 10 - spillEvents[spillEvents.size() - 1].ts * 10};
+                    auto msFromEpochUTC =
+                        time +
+                        time_ * 1'000 +
+                        (spillEvents[i].ts * 10 - spillEvents[spillEvents.size() - 1].ts * 10) / 1'000'000
+                    ;
+                    spillEvents[i].ts = static_cast<long long>(msFromEpochUTC);
+                }
+//                std::cout << spillEvents.front().ts << " " << spillEvents.back().ts << std::endl;
+                for (const auto &spillEventsItem : spillEvents) {
+                    events_[{spillEventsItem.g.index, spillEventsItem.a.index}].emplace_back(
+                                dec_ev_t{spillEventsItem.ts,
+                                spillEventsItem.g.t - spillEventsItem.a.t,
+                                spillEventsItem.g.amp
+                            });
+                }
+//                events_.insert(events_.cend(), spillEvents.cbegin(), spillEvents.cend());
             }
             for (size_t i{0}; i < counters.n; ++i) {
                 counters_[i] += counters.rawhits.at(i);

@@ -16,7 +16,7 @@ class Decoder
 public:
     Decoder();
 
-    void process(const std::string &filePath);
+    void process(const std::string &filePath, const long long &time);
 
     const dec_ch_t &channels() const;
 

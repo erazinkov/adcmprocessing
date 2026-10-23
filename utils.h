@@ -5,6 +5,8 @@
 #include <iostream>
 #include <filesystem>
 
+#include <ctime>
+
 template<typename Iterator>
 inline void func_async(Iterator first, Iterator last) {
     unsigned long const length{static_cast<unsigned long const>(std::distance(first, last))};
@@ -43,6 +45,16 @@ inline bool createOutputDirectory(const std::string& path) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
         return false;
     }
+}
+
+inline long long stringToMsFromEpochUTC(const std::string& s) {
+    std::tm tm{};
+    std::istringstream ss(s);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    if (ss.fail()) throw std::runtime_error("bad time: " + s);
+
+    std::time_t t = timegm(&tm);
+    return static_cast<long long>(t) * 1000;
 }
 
 #endif // UTILS_H

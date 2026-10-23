@@ -57,6 +57,11 @@ void process() {
 
 int main(int argc, char *argv[])
 {
+
+    std::vector<std::pair<std::string, long long int>> files{
+        { "sector10", stringToMsFromEpochUTC("2025-06-18 19:03:37") }
+    };
+
 //     process();
 //     return 0;
 //    QCoreApplication a(argc, argv);
@@ -71,7 +76,9 @@ int main(int argc, char *argv[])
     auto start = std::chrono::steady_clock::now();
     Decoder decoder;
     std::cout << "Processing file: " << filePath << std::endl;
-    decoder.process(filePath);
+    filePath = files.at(0).first;
+    auto time = files.at(0).second;
+    decoder.process(filePath, time);
     auto stop = std::chrono::steady_clock::now();
     auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
@@ -79,6 +86,10 @@ int main(int argc, char *argv[])
         std::cout << "No valid data in file " << filePath << std::endl;
         return 1;
     }
+
+//    std::pair<uint8_t, uint8_t> p{decoder.channels().g.at(0), decoder.channels().a.at(0)};
+//    std::cout << decoder.events().at(p).front().ts << " " <<  decoder.events().at(p).back().ts << std::endl;
+    return 0;
 
     HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
 
