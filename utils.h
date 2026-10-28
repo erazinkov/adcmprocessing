@@ -47,12 +47,26 @@ inline bool createOutputDirectory(const std::string& path) {
     }
 }
 
+//inline long long stringToMsFromEpochUTC(const std::string& s) {
+//    std::tm tm{};
+//    std::istringstream ss(s);
+//    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+//    if (ss.fail()) throw std::runtime_error("bad time: " + s);
+
+//    auto sys = std::chrono::system_clock::from_time_t(timegm(&tm));
+//    // sys -= std::chrono::hours(3);
+//    return std::chrono::duration_cast<std::chrono::milliseconds>(
+//               sys.time_since_epoch()).count();
+//}
+
 inline long long stringToMsFromEpochUTC(const std::string& s) {
     std::tm tm{};
     std::istringstream ss(s);
     ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-    if (ss.fail()) throw std::runtime_error("bad time: " + s);
-
+    if (ss.fail()) {
+        throw std::runtime_error("Error time extracting manipulator: " + s);
+    }
+//    tm.tm_hour -= 3;
     std::time_t t = timegm(&tm);
     return static_cast<long long>(t) * 1000;
 }

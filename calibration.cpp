@@ -342,9 +342,8 @@ void Calibration::fillHistsEnergyByGamma(const std::vector<std::vector<std::uniq
             histogramManager_->histsEnergyByGamma()[i]->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
 
             histogramManager_->histsEnergyByGammaRc()[i]->Add(histsRc.at(i).at(j).get());
-
-            histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j).get());
-            histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
+                histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j).get());
+                histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
         }
     }
 }

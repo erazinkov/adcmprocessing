@@ -126,6 +126,7 @@ void Decoder::process(const std::string &filePath, const long long &time)
                     spillEvents[i].ts = static_cast<long long>(msFromEpochUTC);
                 }
 //                std::cout << spillEvents.front().ts << " " << spillEvents.back().ts << std::endl;
+                std::cout << "Time, s:" << " " << time_ << " " << "Events:" << " " << spillEvents.size() << std::endl;
                 for (const auto &spillEventsItem : spillEvents) {
                     events_[{spillEventsItem.g.index, spillEventsItem.a.index}].emplace_back(
                                 dec_ev_t{spillEventsItem.ts,
