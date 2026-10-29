@@ -71,4 +71,16 @@ inline long long stringToMsFromEpochUTC(const std::string& s) {
     return static_cast<long long>(t) * 1000;
 }
 
+inline long long stringToMcsFromEpochUTC(const std::string& s) {
+    std::tm tm{};
+    std::istringstream ss(s);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    if (ss.fail()) {
+        throw std::runtime_error("Error time extracting manipulator: " + s);
+    }
+//    tm.tm_hour -= 3;
+    std::time_t t = timegm(&tm);
+    return static_cast<long long>(t) * 1'000'000;
+}
+
 #endif // UTILS_H

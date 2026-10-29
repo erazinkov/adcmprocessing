@@ -71,7 +71,7 @@ std::vector<ProcessingData> readProcessingData(const std::string& fileName) {
                     std::istringstream iss(ts);
                     long long int ts;
                     if (iss >> ts) {
-                        pD.ts.push_back(ts);
+                        pD.ts.push_back(ts * 1'000);
                     }
                 }
 
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 {
 
     const std::vector<std::pair<std::string, long long int>> daqData{
-        { "sector1", stringToMsFromEpochUTC("2025-06-17 10:27:54") },
+        { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
 //        { "sector2", stringToMsFromEpochUTC("2025-06-17 10:56:08") },
 //        { "sector3", stringToMsFromEpochUTC("2025-06-17 13:34:41") },
 //        { "sector4", stringToMsFromEpochUTC("2025-06-18 15:33:10") },
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
             std::filesystem::path filePath = daqDataItem.first;
             auto time = daqDataItem.second;
             std::cout << "Processing file: " << filePath << std::endl;
-            std::cout << "Daq start time/Sector max data time " << time << "/" << sectorsDataItem.ts.back() << " " << "ms"<< std::endl;
+            std::cout << "Daq start time/Sector min data time/Sector max data time " << time << "/" << sectorsDataItem.ts.front()<< "/" << sectorsDataItem.ts.back() << " " << "ms"<< std::endl;
             if (time > sectorsDataItem.ts.back()) {
                 std::cout << "Skip daq file " << daqDataItem.first << ".\n"
                           << "Daq start time: " <<  time << ".\n"
@@ -263,9 +263,9 @@ int main(int argc, char *argv[])
             std::cout << "Sector" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
                       << " " << "time" << " " << sectorTime << std::endl;
             for (const auto &sectorsDataItemTsItem : sectorsDataItem.ts) {
-                long long int ms{500};
-                long long int tsMin{sectorsDataItemTsItem - ms};
-                long long int tsMax{sectorsDataItemTsItem + ms};
+                long long int mcs{500'000};
+                long long int tsMin{sectorsDataItemTsItem - mcs};
+                long long int tsMax{sectorsDataItemTsItem + mcs};
                 for (auto it = sectorEvents.begin(); it != sectorEvents.end(); ) {
                     auto& vec = it->second;
                     // Assumes vec is sorted ascending by ts. // 22380506 // 22117186 // 263320
@@ -312,6 +312,7 @@ int main(int argc, char *argv[])
             std::cout << "Sector" << " " << std::to_string(sectorsDataItem.rowIdx) << "_" << std::to_string(sectorsDataItem.colIdx) << " " << "skipped"  << std::endl;
             continue;
         }
+//        return 0; // !!!
 //        std::pair<uint8_t, uint8_t> p{sectorChannels.g.at(0), sectorChannels.a.at(0)}; // 540497
 //        if (sectorEventsFiltered.at(p).size() < 250'000) {
 //            std::cout << "Sector" << " " << sectorEventsFiltered.at(p).size() << " < 250\'000"  << std::endl;
