@@ -15,12 +15,12 @@ PolynomialFunction::Par PolynomialFunction::par(const std::vector<EnergyPeak> &e
     Par par;
     auto ff = [] (double *x, double *par) {
         double arg{x[0]};
-        double fitval = par[0] + par[1] * arg + par[2] * arg * arg;
+        double fitval = par[0] + par[1] * arg + par[2] * arg * arg + par[3] * arg * arg * arg;
 
         return fitval;
     };
 
-    TF1 f{"f", ff , energyPeaks.front().channel(),  energyPeaks.back().channel(), 3};
+    TF1 f{"f", ff , energyPeaks.front().channel(),  energyPeaks.back().channel(), 4};
 
     TGraphErrors g(static_cast<int>(energyPeaks.size()));
 
@@ -30,13 +30,13 @@ PolynomialFunction::Par PolynomialFunction::par(const std::vector<EnergyPeak> &e
     }
 //    f.SetParameter(2, 0.0001);
 //    f.SetParLimits(2, 0.0001, 0.0002);
-    g.Fit(&f, "RN0");
+    g.Fit(&f, "RQN0");
 
     for (auto i{0}; i < f.GetNpar(); ++i) {
-        std::cout << f.GetParameter(i) << " ";
+//        std::cout << f.GetParameter(i) << " ";
         par.p.push_back(f.GetParameter(i));
     }
-    std::cout << std::endl;
+//    std::cout << std::endl;
 
     return par;
 }

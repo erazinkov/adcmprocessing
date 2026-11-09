@@ -26,7 +26,7 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
         {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.2); }},
         {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.5); }},
         {EnergyPeak::Id::SILICON, [&](TH1 *hist, TH1 *) { return findPeakPosSilicon(hist, 1.35); }},
-        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *) { return findPeakPosCarbon(hist, 1.35); }},
+        {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *histRc) { return findPeakPosCarbon(histRc, 1.35); }},
         {EnergyPeak::Id::OXYGENADD, [&](TH1 *hist, TH1 *) { return findPeakPosOxygenAdd(hist, 1.5); }},
         {EnergyPeak::Id::OXYGEN, [&](TH1 *hist, TH1 *) { return findPeakPosOxygen(hist, 1.5); }},
         {EnergyPeak::Id::FE7631, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum7631(histRc, 1.5); }},
@@ -96,11 +96,11 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     std::vector<EnergyPeak::Id> excludePeaks{
 //        EnergyPeak::Id::FE847,
 //        EnergyPeak::Id::FE1238,
-////        EnergyPeak::Id::HYDROGEN,
+//        EnergyPeak::Id::HYDROGEN,
 //        EnergyPeak::Id::CARBON,
 //        EnergyPeak::Id::SILICON,
-////        EnergyPeak::Id::OXYGENADD,
-////        EnergyPeak::Id::OXYGEN,
+//        EnergyPeak::Id::OXYGENADD,
+//        EnergyPeak::Id::OXYGEN,
 //        EnergyPeak::Id::FE7631,
     };
 
@@ -585,6 +585,9 @@ EnergyPeakFinder::PeakPos EnergyPeakFinder::findPeakPosCarbon(TH1 *h, const doub
     xR = pos + 3.0 * sigma;
     yL = y(h, xL);
     yR = y(h, xR);
+    f.SetParLimits(0, 0.0, h->GetMaximum());
+    f.SetParLimits(1, xL, xR);
+    f.SetParLimits(2, 0.25 * sigma, 1.75 * sigma);
     f.SetRange(xL, xR);
     h->Fit("f", "RQN0");
 

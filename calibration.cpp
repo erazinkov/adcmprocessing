@@ -1,7 +1,7 @@
 #include "calibration.h"
 #include "utils.h"
-#include "piecewiselinearfunction.h"
-//#include "polynomialfunction.h"
+//#include "piecewiselinearfunction.h"
+#include "polynomialfunction.h"
 //#include "saturationfunction.h"
 #include "timepeaksfinder.h"
 #include "resolutionprocessing.h"
@@ -112,8 +112,8 @@ void Calibration::fillHistsTimeWithEnergyCutByGammaAlpha(const std::vector<std::
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(hists.size(), channels_.g.size()); ++i) {
-        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
-//        PolynomialFunction fObj(energyPeaks_.at(i));
+//        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+        PolynomialFunction fObj(energyPeaks_.at(i));
 //        SaturationFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
@@ -280,8 +280,8 @@ void Calibration::fillHistsEnergyByGammaAlpha(const std::vector<std::vector<std:
 {
     std::vector<TF1> fs;
     for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
-        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
-//        PolynomialFunction fObj(energyPeaks_.at(i));
+//        PiecewiseLinearFunction fObj(energyPeaks_.at(i));
+        PolynomialFunction fObj(energyPeaks_.at(i));
 //        SaturationFunction fObj(energyPeaks_.at(i));
         TF1 f("f", fObj, 0, 4'000, 0);
         fs.push_back(f);
@@ -342,8 +342,8 @@ void Calibration::fillHistsEnergyByGamma(const std::vector<std::vector<std::uniq
             histogramManager_->histsEnergyByGamma()[i]->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
 
             histogramManager_->histsEnergyByGammaRc()[i]->Add(histsRc.at(i).at(j).get());
-                histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j).get());
-                histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
+            histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j).get());
+            histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
         }
     }
 }

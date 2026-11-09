@@ -12,10 +12,9 @@
 #include <chrono>
 #include <numeric>
 
-//using namespace std::chrono;
 
-constexpr std::uint64_t kWrap = std::uint64_t{1} << 32;          // 32-bit counter
-constexpr std::uint64_t kMaxPlausibleDelta = 3'000'000'000;          // tune to your stream
+constexpr std::uint64_t kWrap = std::uint64_t{1} << 32;
+constexpr std::uint64_t kMaxPlausibleDelta = 1'000'000;
 
 Decoder::Decoder()
 {
@@ -38,9 +37,9 @@ void Decoder::process(const std::string &filePath, const long long &time)
 
     counters_.clear();
     time_ = 0.0;
+    long long int mcsFromLastTs_{0};
     double time_tmp{0.0};
-    double lastTsSum{0.0};
-    bool isFirstSpill{true};
+//    bool isFirstSpill{true};
     long long counter{0};
 
     stor_packet_hdr_t hdr;
@@ -88,7 +87,7 @@ void Decoder::process(const std::string &filePath, const long long &time)
         {
             currentPosition = static_cast<u_int64_t>(ifs_.tellg());
             ifs_ >> cmap;
-//            ProgressBar<u_int64_t>::show(currentPosition, size);
+            ProgressBar<u_int64_t>::show(currentPosition, size);
             spillEvents.clear();
             continue;
         }
@@ -135,7 +134,6 @@ void Decoder::process(const std::string &filePath, const long long &time)
                         spillEvents[i].ts += UINT32_MAX;
                     }
                 }
-
 //                std::uint64_t offset = 0;
 //                for (std::size_t i = 1; i < spillEvents.size(); ++i) {
 //                    if (isOverflow(spillEvents[i - 1].ts, spillEvents[i].ts)) {
@@ -145,7 +143,6 @@ void Decoder::process(const std::string &filePath, const long long &time)
 //                }
                 std::sort(spillEvents.begin(), spillEvents.end());
                 const long long firstTsAfterSort = spillEvents.front().ts;
-//                const long long firstTs = spillEvents.front().ts;
                 for (size_t i{0}; i < spillEvents.size(); ++i) {
                     spillEvents[i].ts -= firstTsAfterSort;
                     if (spillEvents[i].ts < 0) {
@@ -158,49 +155,33 @@ void Decoder::process(const std::string &filePath, const long long &time)
                     const long long deltaTs = spillEvents[i + 1].ts - spillEvents[i].ts;
                     testTs += deltaTs;
                 }
-                const double lastTs = spillEvents.back().ts;
+                const long long int lastTs = spillEvents.back().ts;
                 for (std::size_t i = 0; i < spillEvents.size(); ++i) {
-//                    const long long deltaTsMs = (spillEvents[i].ts - lastTs) / 1'000;
-//                    const long long mcsFromEpochUTC = time +
-//                            static_cast<long long>(time_ * 1'000'000 + static_cast<double>(spillEvents[i].ts) * 10 / 1'000);
                     const long long mcsFromTime    = static_cast<long long>(time_ * 1'000'000.0 + 0.5);
-//                    const long long mcsFromTime    = lastTs / 1'000;
-                    const long long mcsFromSpillTs = spillEvents[i].ts / 1'000;   // ns/ticks -> µs, no overflow
-                    const long long mcsFromEpochUTC = time + mcsFromTime + mcsFromSpillTs;
+                    const long long mcsFromSpillTs = spillEvents[i].ts / 1'00;
+//                    const long long mcsFromEpochUTC = time + mcsFromTime + mcsFromSpillTs;
+                    const long long mcsFromEpochUTC = time + mcsFromLastTs_ + mcsFromSpillTs;
                     spillEvents[i].ts = mcsFromEpochUTC;
-                    if (i == 0) {
-//                        std::cout << msFromEpochUTC << std::endl;
-                    }
                 }
-                std::sort(spillEvents.begin(), spillEvents.end());
-                if (isFirstSpill) {
-                    std::ofstream ofs("test.csv");
-                    if (ofs.is_open()) {
-                        for (size_t i{0}; i < spillEvents.size(); i++) {
-                            ofs << i << " " << spillEvents.at(i).ts << std::endl;
-                        }
-                    }
-                    isFirstSpill = false;
-                }
-
-
-
-                std::cout << static_cast<double>(testTs) / 100'000'000
-                          << " " << "TsSum, s:" << " " << static_cast<double>(lastTs) / 100'000'000
-                          << " " << "Time, s:" << " " << time_tmp << " " << "Events:" << " " << spillEvents.size()
-                          << " " << counter << std::endl;
-//TsSum, s: 9.99292 Time, s: 10.0184 Events: 322766
-//                for (size_t i{0}; i < spillEvents.size(); ++i) {
-////                    auto dateInNanoSec{time + time_ + spillEvents[i].ts * 10 - spillEvents[spillEvents.size() - 1].ts * 10};
-//                    auto msFromEpochUTC =
-//                        time +
-//                        time_ * 1'000 +
-//                        (spillEvents[i].ts * 10 - spillEvents[spillEvents.size() - 1].ts * 10) / 1'000'000
-//                    ;
-//                    spillEvents[i].ts = static_cast<long long>(msFromEpochUTC);
+                const long long int mcsFromLastTs = lastTs / 1'00;
+                mcsFromLastTs_ += mcsFromLastTs;
+//                std::sort(spillEvents.begin(), spillEvents.end());
+//                if (isFirstSpill) {
+//                    std::ofstream ofs("test.csv");
+//                    if (ofs.is_open()) {
+//                        for (size_t i{0}; i < spillEvents.size(); i++) {
+//                            ofs << i << " " << spillEvents.at(i).ts << std::endl;
+//                        }
+//                    }
+//                    isFirstSpill = false;
 //                }
-//                std::cout << spillEvents.front().ts << " " << spillEvents.back().ts << std::endl;
 
+
+
+//                std::cout << static_cast<double>(testTs) / 100'000'000
+//                          << " " << "TsSum, s:" << " " << static_cast<double>(lastTs / 100'000'000.0)
+//                          << " " << "Time, s:" << " " << time_tmp << " " << "Events:" << " " << spillEvents.size()
+//                          << " " << counter << std::endl;
                 for (const auto &spillEventsItem : spillEvents) {
                     events_[{spillEventsItem.g.index, spillEventsItem.a.index}].emplace_back(
                                 dec_ev_t{spillEventsItem.ts,
@@ -215,6 +196,8 @@ void Decoder::process(const std::string &filePath, const long long &time)
             }
 
             time_ += counters.time;
+
+
 
 //            hdr.size -= sizeof(stor_packet_hdr_t);
 //            ifs_.ignore(hdr.size);

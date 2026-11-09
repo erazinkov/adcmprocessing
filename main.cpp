@@ -1,4 +1,4 @@
-//#include <QCoreApplication>
+﻿//#include <QCoreApplication>
 
 #include <iostream>
 #include <limits>
@@ -76,9 +76,9 @@ std::vector<ProcessingData> readProcessingData(const std::string& fileName) {
                 }
 
             }
+            std::sort(pD.ts.begin(), pD.ts.end());
+            processingData.push_back(pD);
         }
-        std::sort(pD.ts.begin(), pD.ts.end());
-        processingData.push_back(pD);
     }
 
     ifs.close();
@@ -183,15 +183,15 @@ int main(int argc, char *argv[])
 
     const std::vector<std::pair<std::string, long long int>> daqData{
         { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
-//        { "sector2", stringToMsFromEpochUTC("2025-06-17 10:56:08") },
-//        { "sector3", stringToMsFromEpochUTC("2025-06-17 13:34:41") },
-//        { "sector4", stringToMsFromEpochUTC("2025-06-18 15:33:10") },
-//        { "sector5", stringToMsFromEpochUTC("2025-06-18 15:49:44") },
-//        { "sector6", stringToMsFromEpochUTC("2025-06-18 16:06:24") },
-//        { "sector7", stringToMsFromEpochUTC("2025-06-18 16:38:34") },
-//        { "sector8", stringToMsFromEpochUTC("2025-06-18 17:03:21") },
-//        { "sector9", stringToMsFromEpochUTC("2025-06-18 17:19:42") },
-//        { "sector10", stringToMsFromEpochUTC("2025-06-18 19:03:37") }
+        { "sector2", stringToMcsFromEpochUTC("2025-06-17 10:56:08") },
+        { "sector3", stringToMcsFromEpochUTC("2025-06-17 13:34:41") },
+        { "sector4", stringToMcsFromEpochUTC("2025-06-18 15:33:10") },
+        { "sector5", stringToMcsFromEpochUTC("2025-06-18 15:49:44") },
+        { "sector6", stringToMcsFromEpochUTC("2025-06-18 16:06:24") },
+        { "sector7", stringToMcsFromEpochUTC("2025-06-18 16:38:34") },
+        { "sector8", stringToMcsFromEpochUTC("2025-06-18 17:03:21") },
+        { "sector9", stringToMcsFromEpochUTC("2025-06-18 17:19:42") },
+//        { "sector10", stringToMcsFromEpochUTC("2025-06-18 19:03:37") }
     };
 
     const std::string processingFile{
@@ -199,29 +199,28 @@ int main(int argc, char *argv[])
     };
 
     std::vector<ProcessingData> sectorsData{readProcessingData(processingFile)};
-//    for (const auto &sectorsDataItem : sectorsData) {
-//        std::cout << sectorsDataItem.rowIdx << " " << sectorsDataItem.colIdx << " " << sectorsDataItem.ts.size() << std::endl;
-//    }
-//    return 0;
 
     for (const auto &sectorsDataItem : sectorsData) {
-        std::unordered_map<std::pair<uint8_t, uint8_t>,
-                               std::vector<dec_ev_t>, PairHash> sectorEvents;
+//        std::unordered_map<std::pair<uint8_t, uint8_t>,
+//                               std::vector<dec_ev_t>, PairHash> sectorEvents;
         std::unordered_map<std::pair<uint8_t, uint8_t>,
                                std::vector<dec_ev_t>, PairHash> sectorEventsFiltered;
         std::map<uint8_t, uint32_t> sectorCounters;
         double sectorTime{0.0};
         dec_ch_t sectorChannels;
-
+        std::cout << "Sector " << std::to_string(sectorsDataItem.rowIdx) << "_" << std::to_string(sectorsDataItem.colIdx) << std::endl;
         auto start = std::chrono::steady_clock::now();
         for (const auto &daqDataItem : daqData) {
+            std::unordered_map<std::pair<uint8_t, uint8_t>,
+                                   std::vector<dec_ev_t>, PairHash> sectorEvents;
             std::filesystem::path filePath = daqDataItem.first;
             auto time = daqDataItem.second;
-            std::cout << "Processing file: " << filePath << std::endl;
+
+            std::cout << "Daq file: " << filePath << std::endl;
             std::cout << "Daq start time/Sector min data time/Sector max data time " << time << "/" << sectorsDataItem.ts.front()<< "/" << sectorsDataItem.ts.back() << " " << "ms"<< std::endl;
             if (time > sectorsDataItem.ts.back()) {
                 std::cout << "Skip daq file " << daqDataItem.first << ".\n"
-                          << "Daq start time: " <<  time << ".\n"
+                          << "Daq start time: " <<  time << "\n"
                           << "Sector data time: " << sectorsDataItem.ts.back() << std::endl;
                 continue;
             }
@@ -238,13 +237,13 @@ int main(int argc, char *argv[])
                     it->second.insert(it->second.end(), vec.begin(), vec.end());
                 }
             }
-            long long int e1{0};
-            for (const auto &[key, value] : decoder.events()) {
+//            long long int e1{0};
+//            for (const auto &[key, value] : decoder.events()) {
     //            std::cout << key.first << "_" << key.second << " " << value.size() << std::endl;
-                e1 += value.size();
-            }
-            std::cout << "Sector unfiltered decoder.events()" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
-                      << " " << "number" << " " << e1 << std::endl;
+//                e1 += value.size();
+//            }
+//            std::cout << "Sector unfiltered decoder.events()" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
+//                      << " " << "number" << " " << e1 << std::endl;
             for (const auto& [key, value] : decoder.counters()) {
                 auto [it, inserted] = sectorCounters.try_emplace(key, value);
                 if (!inserted) {
@@ -255,30 +254,27 @@ int main(int argc, char *argv[])
             sectorTime += decoder.time();
             long long int e{0};
             for (const auto &[key, value] : sectorEvents) {
-    //            std::cout << key.first << "_" << key.second << " " << value.size() << std::endl;
                 e += value.size();
             }
-            std::cout << "Sector unfiltered events" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
-                      << " " << "number" << " " << e << std::endl;
-            std::cout << "Sector" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
-                      << " " << "time" << " " << sectorTime << std::endl;
+            std::cout << "Daq file" << " " << filePath << " " << "Sector" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
+                      << " " << "unfiltered events" << " " << e << std::endl;
+//            std::cout << "Sector" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
+//                      << " " << "time" << " " << sectorTime << std::endl;
             for (const auto &sectorsDataItemTsItem : sectorsDataItem.ts) {
                 long long int mcs{500'000};
                 long long int tsMin{sectorsDataItemTsItem - mcs};
                 long long int tsMax{sectorsDataItemTsItem + mcs};
                 for (auto it = sectorEvents.begin(); it != sectorEvents.end(); ) {
                     auto& vec = it->second;
-                    // Assumes vec is sorted ascending by ts. // 22380506 // 22117186 // 263320
-
                     // First element with ts > tsMin   (open lower bound)
                     auto first = std::upper_bound(
                         vec.begin(), vec.end(), tsMin,
-                        [](long long v, const dec_ev_t& e) { return v < e.ts; });
+                        [](long long v, const dec_ev_t& e) { return v <= e.ts; });
 
                     // First element with ts >= tsMax  (open upper bound)
                     auto last = std::lower_bound(
                         first, vec.end(), tsMax,
-                        [](const dec_ev_t& e, long long v) { return e.ts < v; });
+                        [](const dec_ev_t& e, long long v) { return e.ts <= v; });
 
                     if (first != last) {
                         auto& dst = sectorEventsFiltered[it->first];
@@ -297,28 +293,29 @@ int main(int argc, char *argv[])
                     }
                 }
             }
+            long long int eF{0};
+            for (const auto &[key, value] : sectorEventsFiltered) {
+                eF += value.size();
+            }
+            std::cout << "!!!" << "Sector" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
+                      << " " << "filtered events" << " " << eF << std::endl;
         }
+        std::cout << "---------------------------" << std::endl;
         long long int eF{0};
         for (const auto &[key, value] : sectorEventsFiltered) {
-//            std::cout << key.first << "_" << key.second << " " << value.size() << std::endl;
             eF += value.size();
         }
-        std::cout << "Sector" << " " << std::to_string(sectorsDataItem.rowIdx) << "_" << std::to_string(sectorsDataItem.colIdx)
-                  << " " << "events number" << " " << eF << std::endl;
+        std::cout << "Sector" << " " << sectorsDataItem.rowIdx << "_" << sectorsDataItem.colIdx
+                  << " " << "filtered events" << " " << eF << std::endl;
+//        std::cout << "Sector" << " " << std::to_string(sectorsDataItem.rowIdx) << "_" << std::to_string(sectorsDataItem.colIdx)
+//                  << " " << "events number" << " " << eF << std::endl;
 //        if (e < 250'000) {
 //            continue;
 //        }
-        if (sectorChannels.g.empty() || sectorChannels.a.empty()) {
+        if (sectorChannels.g.empty() || sectorChannels.a.empty() || eF < 5'000'000) {
             std::cout << "Sector" << " " << std::to_string(sectorsDataItem.rowIdx) << "_" << std::to_string(sectorsDataItem.colIdx) << " " << "skipped"  << std::endl;
             continue;
         }
-//        return 0; // !!!
-//        std::pair<uint8_t, uint8_t> p{sectorChannels.g.at(0), sectorChannels.a.at(0)}; // 540497
-//        if (sectorEventsFiltered.at(p).size() < 250'000) {
-//            std::cout << "Sector" << " " << sectorEventsFiltered.at(p).size() << " < 250\'000"  << std::endl;
-//            continue;
-//        }
-//        std::cout << "Sector" << " " << sectorEventsFiltered.at(p).size() << std::endl;
         auto stop = std::chrono::steady_clock::now();
         auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
@@ -341,8 +338,8 @@ int main(int argc, char *argv[])
         histogramWriter.addHist(histogramManager.histEnergyTotal());
         histogramWriter.addHists(histogramManager.histsEnergyByGamma());
     //    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
-    //    histogramWriter.addHists(histogramManager.histsAmpByGamma());
-    //    histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
+        histogramWriter.addHists(histogramManager.histsAmpByGamma());
+        histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
 
         const std::string rootFileName{AppConstants::OUTPUT_PATH + fileName + ".root"};
         if (histogramWriter.write(rootFileName)) {
