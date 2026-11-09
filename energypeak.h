@@ -2,6 +2,7 @@
 #define ENERGYPEAK_H
 
 #include <iostream>
+#include <map>
 
 class EnergyPeak
 {
@@ -28,6 +29,8 @@ public:
     void setChannel(double newChannel);
 
     static double energyById(EnergyPeak::Id id);
+    static std::string idToString(EnergyPeak::Id id);
+    static EnergyPeak::Id idFromString(const std::string& s);
 
     bool operator<(const EnergyPeak& other) const {
         return channel_ < other.channel_;

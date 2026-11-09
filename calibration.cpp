@@ -22,6 +22,212 @@ Calibration::Calibration(HistogramManager *histogramManager)
     }
 }
 
+void Calibration::processBuckets(const std::string &fileName, long long startMcs, long long endMcs)
+{
+    fillHistsTimeByGammaAlpha(histogramManager_->histsTimeByGammaAlpha(), false);
+
+    const auto igMax = std::min(histogramManager_->histsTimeByGammaAlpha().size(), channels_.g.size());
+    const auto iaMax = std::min(histogramManager_->histsTimeByGammaAlpha().at(0).size(), channels_.a.size());
+    for (size_t ig{0}; ig < igMax; ++ig) {
+        for (size_t ia{0}; ia <  iaMax; ++ia) {
+            std::pair<uint8_t, uint8_t> p{ig, ia};
+            timeCorrections_[p] = TimePeaksFinder::calculatePeakPos(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia).get());
+        }
+    }
+
+    fillHistsTimeByGammaAlpha(histogramManager_->histsTimeCorrectedByGammaAlpha(), true);
+
+    fillHistsAmpByGammaAlpha(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
+
+    fillHistsAmpByGamma(histogramManager_->histsAmpByGammaAlphaSg(), histogramManager_->histsAmpByGammaAlphaBg(), histogramManager_->histsAmpByGammaAlphaRc());
+
+    energyPeaks_.clear();
+    std::cout << "Use" << std::string(GREEN) + " internal " + RESET + "energy peaks positions" << std::endl;
+    for (size_t i{0}; i < std::min(histogramManager_->histsAmpByGamma().size(), channels_.g.size()); ++i) {
+        energyPeakFinder_.process(histogramManager_->histsAmpByGamma().at(i).get(), histogramManager_->histsAmpByGammaRc().at(i).get());
+        energyPeaks_.push_back(energyPeakFinder_.energyPeaks());
+    }
+
+    struct Row {
+        long long startMcs;
+        long long endMcs;
+        uint8_t gIdx;
+        std::vector<EnergyPeak> peaks;
+        double timeCorrection;
+    };
+
+    auto encodePeak = [](const EnergyPeak& p) {
+        std::ostringstream os;
+        os.imbue(std::locale::classic());
+        os.precision(10);
+        os << EnergyPeak::idToString(p.id()) << ':'
+           << p.channel()    << ':'
+           << p.channelErr();
+        return os.str();
+    };
+    auto encodePeaks = [&](const std::vector<EnergyPeak>& peaks) {
+        std::string out;
+        for (size_t i = 0; i < peaks.size(); ++i) {
+            if (i) out += '|';
+            out += encodePeak(peaks[i]);
+        }
+        return out;
+    };
+
+    auto csvQuote = [](const std::string& s) {
+        if (s.find_first_of(",\"\n\r") == std::string::npos)
+            return s;
+        std::string out = "\"";
+        for (char c : s) {
+            if (c == '"') out += "\"\"";
+            else          out += c;
+        }
+        out += '"';
+        return out;
+    };
+
+    auto writeRowsToCsv = [&](const std::vector<Row>& rows, const std::string& fileName) {
+        std::ofstream ofs(fileName, std::ios::app);
+        if (!ofs) {
+            std::cerr << "Can\'t open " << fileName << "\n";
+            return;
+        }
+        ofs.imbue(std::locale::classic());
+        ofs.precision(10);
+
+        for (const auto& r : rows) {
+            ofs << r.startMcs << ','
+                << r.endMcs << ','
+                << static_cast<int>(r.gIdx) << ','
+                << csvQuote(encodePeaks(r.peaks)) << ','
+                << r.timeCorrection << '\n';
+        }
+    };
+
+    std::vector<Row> rows;
+    for (size_t ig{0}; ig < igMax; ++ig) {
+        double timeCorrection{0.0};
+        for (size_t ia{0}; ia <  iaMax; ++ia) {
+            std::pair<uint8_t, uint8_t> p{ig, ia};
+            timeCorrection += timeCorrections_[p];
+        }
+        timeCorrection /= igMax;
+        Row r;
+        r.startMcs = startMcs;
+        r.endMcs = endMcs;
+        r.gIdx = ig;
+        r.peaks = energyPeaks_.at(ig);
+        r.timeCorrection = timeCorrection;
+        rows.push_back(std::move(r));
+    }
+    writeRowsToCsv(rows, "rows.csv");
+
+
+    auto splitCsvLine = [](const std::string& line) {
+        std::vector<std::string> fields;
+        std::string cur;
+        bool inQuotes = false;
+
+        for (size_t i = 0; i < line.size(); ++i) {
+            char c = line[i];
+            if (inQuotes) {
+                if (c == '"') {
+                    if (i + 1 < line.size() && line[i + 1] == '"') {
+                        cur += '"';   // "" -> "
+                        ++i;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    cur += c;
+                }
+            } else {
+                if (c == '"')      inQuotes = true;
+                else if (c == ',') { fields.push_back(cur); cur.clear(); }
+                else               cur += c;
+            }
+        }
+        fields.push_back(cur);   // last field
+        return fields;
+    };
+
+    auto decodePeaks = [](const std::string& cell) {
+        std::vector<EnergyPeak> out;
+        if (cell.empty())
+            return out;
+
+        std::istringstream listStream(cell);
+        listStream.imbue(std::locale::classic());
+        std::string peakTok;
+
+        while (std::getline(listStream, peakTok, '|')) {
+            // Expect three ':'-separated pieces
+            std::istringstream ps(peakTok);
+            ps.imbue(std::locale::classic());
+            std::string idStr, chStr, errStr;
+
+            if (!std::getline(ps, idStr, ':') ||
+                !std::getline(ps, chStr, ':') ||
+                !std::getline(ps, errStr, ':')) {
+                throw std::runtime_error("Malformed peak token: '" + peakTok + "'");
+            }
+
+            EnergyPeak::Id id = EnergyPeak::idFromString(idStr);
+            double channel    = std::stod(chStr);
+            double channelErr = std::stod(errStr);
+
+            out.emplace_back(id, channel, channelErr);
+        }
+        return out;
+    };
+
+    auto readRowsFromCsv = [&](const std::string& fileName) {
+        std::ifstream ifs(fileName);
+        if (!ifs) {
+            throw std::runtime_error("Cannot open " + fileName);
+        }
+        ifs.imbue(std::locale::classic());
+
+        std::vector<Row> rows;
+        std::string line;
+        size_t lineNo = 0;
+
+        while (std::getline(ifs, line)) {
+            ++lineNo;
+            if (!line.empty() && line.back() == '\r') line.pop_back();   // Windows CRLF
+
+            // Skip blank lines and header
+            if (line.empty()) continue;
+            if (lineNo == 1 && line.rfind("var1,", 0) == 0) continue;
+
+            auto f = splitCsvLine(line);
+            if (f.size() != 5) {
+                throw std::runtime_error(
+                    "Line " + std::to_string(lineNo) + ": expected 5 fields, got " +
+                    std::to_string(f.size()));
+            }
+
+            try {
+                Row r;
+                r.startMcs = std::stoll(f[0]);
+                r.endMcs = std::stoll(f[1]);
+                r.gIdx = static_cast<uint8_t>(std::stoi(f[2]));
+                r.peaks = decodePeaks(f[3]);
+                r.timeCorrection = std::stod(f[4]);
+                rows.push_back(std::move(r));
+            } catch (const std::exception& e) {
+                throw std::runtime_error(
+                    "Line " + std::to_string(lineNo) + ": " + e.what());
+            }
+        }
+        return rows;
+    };
+    auto rows_ = readRowsFromCsv("rows.csv");
+    for (const auto &r : rows_) {
+        std::cout << r.startMcs << " " << r.endMcs << " " << r.timeCorrection << std::endl;
+    }
+}
+
 void Calibration::process(const std::string &internalEnergyPeaksFileName, const std::string &externalEnergyPeaksFileName)
 {
 

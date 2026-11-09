@@ -14,6 +14,7 @@ class Calibration
 public:
     Calibration(HistogramManager *histogramManager);
 
+    void processBuckets(const std::string &fileName, long long startMcs, long long endMcs);
     void process(const std::string &internalEnergyPeaksFileName,
                  const std::string &externalEnergyPeaksFileName = "");
     void setNewData(const std::unordered_map<std::pair<uint8_t, uint8_t>,

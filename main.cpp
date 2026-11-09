@@ -252,7 +252,7 @@ std::vector<Bucket> splitToBuckets(const std::unordered_map<std::pair<uint8_t, u
     return result;
 }
 
-void processPredefined() {
+void processBuckets() {
     const std::vector<std::pair<std::string, long long int>> daqData{
         { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
         { "sector2", stringToMcsFromEpochUTC("2025-06-17 10:56:08") },
@@ -268,7 +268,8 @@ void processPredefined() {
 
     std::vector<Bucket> result;
 
-    long long durationMcs{5 * 60 * 1'000'000};
+
+    long long durationMcs{15 * 60 * 1'000'000};
 
     for (const auto &daqDataItem : daqData) {
         std::map<uint8_t, uint32_t> daqCounters;
@@ -306,22 +307,24 @@ void processPredefined() {
             e += value.size();
         }
         auto r = splitToBuckets(daqEvents, durationMcs);
+        for (const auto &rItem : r) {
+            HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
+            Calibration calibration(&histogramManager);
+            calibration.setNewData(rItem.events, daqChannels, 0, daqCounters);
+//            const std::string fileName = std::to_string(rItem.startMcs) + "_" + std::to_string(rItem.endMcs);
+//            const std::string fileName{AppConstants::OUTPUT_PATH + fileName + "_ep" + ".root"};
+            calibration.processBuckets("", rItem.startMcs, rItem.endMcs);
+        }
 
-        result.insert(result.end(),
-                    std::make_move_iterator(r.begin()),
-                    std::make_move_iterator(r.end()));
+
+
     }
-
-    for (const auto &r : result) {
-        std::cout << r.startMcs << " " << r.endMcs << " " << r.events.size() << std::endl;
-    }
-
 }
 
 int main(int argc, char *argv[])
 {
 
-    processPredefined();
+    processBuckets();
     return 0;
 
     const std::vector<std::pair<std::string, long long int>> daqData{
