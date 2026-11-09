@@ -178,8 +178,151 @@ int process(const std::string &file, const std::pair<std::string, long long int>
 
 }
 
+
+struct Bucket {
+    long long startMcs;   // inclusive
+    long long endMcs;     // exclusive
+    std::unordered_map<std::pair<uint8_t, uint8_t>,
+                       std::vector<dec_ev_t>, PairHash> events;
+
+    bool contains(long long ts) const noexcept {
+        return ts >= startMcs && ts < endMcs;
+    }
+    long long durationMcs() const noexcept { return endMcs - startMcs; }
+};
+
+std::vector<Bucket> splitToBuckets(const std::unordered_map<std::pair<uint8_t, uint8_t>,
+                                                  std::vector<dec_ev_t>, PairHash>& daqEvents, long long &durationMcs) {
+    std::vector<Bucket> result;
+
+    if (daqEvents.empty()) {
+        return result;
+    }
+
+    long long globalMin = std::numeric_limits<long long>::max();
+    long long globalMax = std::numeric_limits<long long>::min();
+    bool any = false;
+    for (const auto& [key, vec] : daqEvents) {
+        if (vec.empty()) continue;
+        any = true;
+        globalMin = std::min(globalMin, vec.front().ts);
+        globalMax = std::max(globalMax, vec.back().ts);
+    }
+    if (!any) {
+        return result;
+    }
+
+    const long long span = globalMax - globalMin;
+
+
+    long long nBuckets;
+    if (span < durationMcs) {
+        nBuckets = 1;
+    } else {
+        nBuckets = span / durationMcs;
+    }
+
+    result.resize(nBuckets);
+    for (long long i = 0; i < nBuckets; ++i) {
+        result[i].startMcs = globalMin + i * durationMcs;
+        result[i].endMcs   = std::min(globalMin + (i + 1) * durationMcs, globalMax + 1);
+    }
+
+    for (const auto& [key, vec] : daqEvents) {
+        if (vec.empty()) {
+            continue;
+        }
+        for (const auto& ev : vec) {
+            long long idx = (ev.ts - globalMin) / durationMcs;
+            if (idx >= nBuckets) {
+                idx = nBuckets - 1;
+            }
+            result[idx].events[key].push_back(ev);
+        }
+    }
+
+    for (auto& bucket : result) {
+        for (auto& [key, vec] : bucket.events) {
+            std::sort(vec.begin(), vec.end(), [](const dec_ev_t& a, const dec_ev_t& b) {
+                          return a.ts < b.ts;
+                      });
+        }
+    }
+
+    return result;
+}
+
+void processPredefined() {
+    const std::vector<std::pair<std::string, long long int>> daqData{
+        { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
+        { "sector2", stringToMcsFromEpochUTC("2025-06-17 10:56:08") },
+//        { "sector3", stringToMcsFromEpochUTC("2025-06-17 13:34:41") },
+//        { "sector4", stringToMcsFromEpochUTC("2025-06-18 15:33:10") },
+//        { "sector5", stringToMcsFromEpochUTC("2025-06-18 15:49:44") },
+//        { "sector6", stringToMcsFromEpochUTC("2025-06-18 16:06:24") },
+//        { "sector7", stringToMcsFromEpochUTC("2025-06-18 16:38:34") },
+//        { "sector8", stringToMcsFromEpochUTC("2025-06-18 17:03:21") },
+//        { "sector9", stringToMcsFromEpochUTC("2025-06-18 17:19:42") },
+//        { "sector10", stringToMcsFromEpochUTC("2025-06-18 19:03:37") }
+    };
+
+    std::vector<Bucket> result;
+
+    long long durationMcs{5 * 60 * 1'000'000};
+
+    for (const auto &daqDataItem : daqData) {
+        std::map<uint8_t, uint32_t> daqCounters;
+        dec_ch_t daqChannels;
+        std::unordered_map<std::pair<uint8_t, uint8_t>,
+                               std::vector<dec_ev_t>, PairHash> daqEvents;
+        std::filesystem::path filePath = daqDataItem.first;
+        auto time = daqDataItem.second;
+
+        std::cout << "Daq file: " << filePath << std::endl;
+        std::cout << "Daq start time" << " " << time <<  " " << "ms"<< std::endl;
+        Decoder decoder;
+        decoder.process(filePath, time);
+        if (decoder.events().empty() || decoder.time() < std::numeric_limits<double>::epsilon() || decoder.counters().empty()) {
+            std::cout << "No valid data in file " << filePath << std::endl;
+            continue;
+        }
+
+        for (const auto& [key, vec] : decoder.events()) {
+            auto [it, inserted] = daqEvents.try_emplace(key, vec);
+            if (!inserted) {
+                it->second.insert(it->second.end(), vec.begin(), vec.end());
+            }
+        }
+
+        for (const auto& [key, value] : decoder.counters()) {
+            auto [it, inserted] = daqCounters.try_emplace(key, value);
+            if (!inserted) {
+                it->second = value;
+            }
+        }
+        daqChannels = decoder.channels();
+        long long int e{0};
+        for (const auto &[key, value] : daqEvents) {
+            e += value.size();
+        }
+        auto r = splitToBuckets(daqEvents, durationMcs);
+
+        result.insert(result.end(),
+                    std::make_move_iterator(r.begin()),
+                    std::make_move_iterator(r.end()));
+    }
+
+    for (const auto &r : result) {
+        std::cout << r.startMcs << " " << r.endMcs << " " << r.events.size() << std::endl;
+    }
+
+}
+
 int main(int argc, char *argv[])
 {
+
+    processPredefined();
+    return 0;
 
     const std::vector<std::pair<std::string, long long int>> daqData{
         { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
