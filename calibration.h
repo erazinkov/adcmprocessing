@@ -17,6 +17,7 @@ public:
     void processBuckets(const std::string &fileName, long long startMcs, long long endMcs);
     void process(const std::string &internalEnergyPeaksFileName,
                  const std::string &externalEnergyPeaksFileName = "");
+    void processBuckets_1(const std::string &fileName);
     void setNewData(const std::unordered_map<std::pair<uint8_t, uint8_t>,
                           std::vector<dec_ev_t>, PairHash> &events,
                     const dec_ch_t &channels,
@@ -34,6 +35,35 @@ public:
     void loadEnergyPeaks(const std::string &fileName);
 
 private:
+
+    struct Row {
+        long long startMcs;
+        long long endMcs;
+        uint8_t gIdx;
+        std::vector<EnergyPeak> peaks;
+        double timeCorrection;
+    };
+
+    Row* findRow(long long mcs, int gamma) {
+        auto it = std::find_if(rows_.begin(), rows_.end(),
+            [mcs, gamma](const Row& r) {
+                return mcs > r.startMcs && mcs < r.endMcs
+                    && r.gIdx == static_cast<uint8_t>(gamma);
+            });
+        return it == rows_.end() ? nullptr : &*it;
+    }
+
+    void fillHistEnergyMcs(const std::vector<dec_ev_t> &events,
+                           TH1 *h,
+                           double prevT,
+                           double nextT,
+                           bool exclude,
+                           uint8_t gamma);
+
+    void fillHistsEnergyByGammaAlphaMcs(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc);
+
+    std::vector<Row> rows_;
+
     HistogramManager *histogramManager_;
     std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_t>> events_m_;
     double time_;

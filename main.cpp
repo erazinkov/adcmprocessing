@@ -255,7 +255,7 @@ std::vector<Bucket> splitToBuckets(const std::unordered_map<std::pair<uint8_t, u
 void processBuckets() {
     const std::vector<std::pair<std::string, long long int>> daqData{
         { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
-        { "sector2", stringToMcsFromEpochUTC("2025-06-17 10:56:08") },
+//        { "sector2", stringToMcsFromEpochUTC("2025-06-17 10:56:08") },
 //        { "sector3", stringToMcsFromEpochUTC("2025-06-17 13:34:41") },
 //        { "sector4", stringToMcsFromEpochUTC("2025-06-18 15:33:10") },
 //        { "sector5", stringToMcsFromEpochUTC("2025-06-18 15:49:44") },
@@ -313,7 +313,7 @@ void processBuckets() {
             calibration.setNewData(rItem.events, daqChannels, 0, daqCounters);
 //            const std::string fileName = std::to_string(rItem.startMcs) + "_" + std::to_string(rItem.endMcs);
 //            const std::string fileName{AppConstants::OUTPUT_PATH + fileName + "_ep" + ".root"};
-            calibration.processBuckets("", rItem.startMcs, rItem.endMcs);
+            calibration.processBuckets("external.csv", rItem.startMcs, rItem.endMcs);
         }
 
 
