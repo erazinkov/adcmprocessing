@@ -43,14 +43,30 @@ private:
         std::vector<EnergyPeak> peaks;
         double timeCorrection;
     };
+    struct RowF {
+        long long startMcs;
+        long long endMcs;
+        uint8_t gIdx;
+        TF1 f;
+        double timeCorrection;
+    };
 
     Row* findRow(long long mcs, int gamma) {
         auto it = std::find_if(rows_.begin(), rows_.end(),
             [mcs, gamma](const Row& r) {
-                return mcs > r.startMcs && mcs < r.endMcs
+                return mcs >= r.startMcs && mcs <= r.endMcs
                     && r.gIdx == static_cast<uint8_t>(gamma);
             });
         return it == rows_.end() ? nullptr : &*it;
+    }
+
+    RowF* findRowF(long long mcs, int gamma) {
+        auto it = std::find_if(rowsF_.begin(), rowsF_.end(),
+            [mcs, gamma](const RowF& r) {
+                return mcs >= r.startMcs && mcs <= r.endMcs
+                    && r.gIdx == static_cast<uint8_t>(gamma);
+            });
+        return it == rowsF_.end() ? nullptr : &*it;
     }
 
     void fillHistEnergyMcs(const std::vector<dec_ev_t> &events,
@@ -63,6 +79,7 @@ private:
     void fillHistsEnergyByGammaAlphaMcs(const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsSg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsBg, const std::vector<std::vector<std::unique_ptr<TH1D>> > &histsRc);
 
     std::vector<Row> rows_;
+    std::vector<RowF> rowsF_;
 
     HistogramManager *histogramManager_;
     std::map<std::pair<uint8_t, uint8_t>, std::vector<dec_ev_t>> events_m_;

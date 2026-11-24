@@ -8,6 +8,7 @@
 
 #include <TFile.h>
 #include <TTree.h>
+//#include <TROOT.h>
 
 #include "consoletable.h"
 
@@ -103,7 +104,7 @@ void Calibration::processBuckets(const std::string &fileName, long long startMcs
             std::pair<uint8_t, uint8_t> p{ig, ia};
             timeCorrection += timeCorrections_[p];
         }
-        timeCorrection /= igMax;
+        timeCorrection /= iaMax;
         Row r;
         r.startMcs = startMcs;
         r.endMcs = endMcs;
@@ -184,7 +185,7 @@ void Calibration::process(const std::string &internalEnergyPeaksFileName, const 
 
 void Calibration::processBuckets_1(const std::string &fileName)
 {
-
+//    ROOT::EnableThreadSafety();
 
     auto splitCsvLine = [](const std::string& line) {
         std::vector<std::string> fields;
@@ -304,17 +305,14 @@ void Calibration::fillHistEnergyMcs(const std::vector<dec_ev_t> &events,
                                     bool exclude,
                                     uint8_t gamma)
 {
+
     for (const auto & eventItem : events) {
-        auto row = findRow(eventItem.ts, gamma);
-        if (row) {
+        auto rowF = findRowF(eventItem.ts, gamma);
+        if (rowF) {
             auto t{static_cast<double>(eventItem.tdc)};
             auto a{static_cast<double>(eventItem.amp)};
-            auto p{row->peaks};
-            auto tc{row->timeCorrection};
-//            PiecewiseLinearFunction fObj(p);
-            PolynomialFunction fObj(p);
-//            SaturationFunction fObj(p);
-            TF1 f("f", fObj, 0, 4'000, 0);
+            TF1 f{rowF->f};
+            auto tc{rowF->timeCorrection};
             auto minT{tc + prevT};
             auto maxT{tc + nextT};
             if (exclude) {
@@ -342,22 +340,52 @@ void Calibration::fillHistsEnergyByGammaAlphaMcs(const std::vector<std::vector<s
 //        TF1 f("f", fObj, 0, 4'000, 0);
 //        fs.push_back(f);
 //    }
+    for (const auto &rowItem : rows_) {
+        PolynomialFunction fObj(rowItem.peaks);
+        TF1 f("f", fObj, 0, 4'000, 0);
+        RowF rF;
+        rF.startMcs = rowItem.startMcs;
+        rF.endMcs = rowItem.endMcs;
+        rF.gIdx = rowItem.gIdx;
+        rF.timeCorrection = rowItem.timeCorrection;
+        rF.f = f;
+        rowsF_.push_back(rF);
+    }
+    std::cout << "rowsF_ is ready" << std::endl;
     std::vector<std::function<void()>> tasks;
     for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
         for (size_t j{0}; j <  std::min(histsSg.at(i).size(), channels_.a.size()); ++j) {
             tasks.push_back([this, &histsSg, &histsBg, &histsRc, i, j](){
                 histsSg.at(i).at(j)->Reset();
-                histsBg.at(i).at(j)->Reset();
-                histsRc.at(i).at(j)->Reset();
+//                histsBg.at(i).at(j)->Reset();
+//                histsRc.at(i).at(j)->Reset();
                 std::pair<uint8_t, uint8_t> p{*std::next(channels_.g.begin(), i), *std::next(channels_.a.begin(), j)};
                 if (events_m_.find(p) != events_m_.end()) {
                     auto minT_sg{ - 3.0 };
                     auto maxT_sg{ + 3.0 };
                     fillHistEnergyMcs(events_m_[p], histsSg.at(i).at(j).get(), minT_sg, maxT_sg, false, p.first);
+//                    auto minT_bg{ - 30.0 };
+//                    auto maxT_bg{ - 20.0 };
+//                    fillHistEnergyMcs(events_m_[p], histsBg.at(i).at(j).get(), minT_bg, maxT_bg, false, p.first);
+//                    fillHistEnergyMcs(events_m_[p], histsRc.at(i).at(j).get(), minT_bg, maxT_bg, true, p.first);
+                }
+            });
+        }
+    }
+    func_async(tasks.begin(), tasks.end());
+    tasks.clear();
+    for (size_t i{0}; i < std::min(histsSg.size(), channels_.g.size()); ++i) {
+        for (size_t j{0}; j <  std::min(histsSg.at(i).size(), channels_.a.size()); ++j) {
+            tasks.push_back([this, &histsSg, &histsBg, &histsRc, i, j](){
+//                histsSg.at(i).at(j)->Reset();
+                histsBg.at(i).at(j)->Reset();
+//                histsRc.at(i).at(j)->Reset();
+                std::pair<uint8_t, uint8_t> p{*std::next(channels_.g.begin(), i), *std::next(channels_.a.begin(), j)};
+                if (events_m_.find(p) != events_m_.end()) {
                     auto minT_bg{ - 30.0 };
                     auto maxT_bg{ - 20.0 };
                     fillHistEnergyMcs(events_m_[p], histsBg.at(i).at(j).get(), minT_bg, maxT_bg, false, p.first);
-                    fillHistEnergyMcs(events_m_[p], histsRc.at(i).at(j).get(), minT_bg, maxT_bg, true, p.first);
+//                    fillHistEnergyMcs(events_m_[p], histsRc.at(i).at(j).get(), minT_bg, maxT_bg, true, p.first);
                 }
             });
         }
@@ -615,10 +643,11 @@ void Calibration::fillHistsEnergyByGamma(const std::vector<std::vector<std::uniq
     }
     for (size_t i{0}; i < histsSg.size(); ++i) {
         for (size_t j{0}; j <  histsSg.at(i).size(); ++j) {
+
             histogramManager_->histsEnergyByGamma()[i]->Add(histsSg.at(i).at(j).get());
             histogramManager_->histsEnergyByGamma()[i]->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
 
-            histogramManager_->histsEnergyByGammaRc()[i]->Add(histsRc.at(i).at(j).get());
+//            histogramManager_->histsEnergyByGammaRc()[i]->Add(histsRc.at(i).at(j).get());
             histogramManager_->histEnergyTotal()->Add(histsSg.at(i).at(j).get());
             histogramManager_->histEnergyTotal()->Add(histsBg.at(i).at(j).get(), -1.0 * 6.0 / 10.0);
         }

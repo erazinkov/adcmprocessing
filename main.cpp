@@ -85,7 +85,7 @@ std::vector<ProcessingData> readProcessingData(const std::string& fileName) {
     return processingData;
 }
 
-int process(const std::string &file, const std::pair<std::string, long long int> &daqDataItem) {
+int process() {
 //    if (argc != 2) {
 //        std::cerr << "Usage: " << argv[0] << " <filepath>" << std::endl;
 //        return 1;
@@ -95,85 +95,99 @@ int process(const std::string &file, const std::pair<std::string, long long int>
 //        return 1;
 //    }
 
+    std::vector<std::string> daqFiles{
+        "tochka_1_t",
+        "tochka_2_t",
+        "tochka_3_t",
+        "tochka_4_t",
+        "tochka_5_t",
+        "tochka_6_t",
+        "tochka_7_t",
+        "tochka_8_t",
+        "tochka_9_t",
+
+    };
+
     if (!createOutputDirectory(AppConstants::OUTPUT_PATH)) {
         return 1;
     }
-    auto start = std::chrono::steady_clock::now();
-    std::filesystem::path filePath = daqDataItem.first;
-    auto time = daqDataItem.second;
-    Decoder decoder;
-    std::cout << "Processing file: " << filePath << std::endl;
-    decoder.process(filePath, time);
-    auto stop = std::chrono::steady_clock::now();
-    auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
-    if (decoder.events().empty() || decoder.time() < std::numeric_limits<double>::epsilon() || decoder.counters().empty()) {
-        std::cout << "No valid data in file " << filePath << std::endl;
-        return 1;
-    }
+    for (const auto &daqFilesItem : daqFiles) {
+        auto start = std::chrono::steady_clock::now();
+        std::filesystem::path filePath = daqFilesItem;
+        Decoder decoder;
+        std::cout << "Processing file: " << filePath << std::endl;
+        decoder.process(filePath, 0);
+        auto stop = std::chrono::steady_clock::now();
+        auto dT{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
 
-//    std::pair<uint8_t, uint8_t> p{decoder.channels().g.at(0), decoder.channels().a.at(0)};
-//    std::cout << decoder.events().at(p).front().ts << " " <<  decoder.events().at(p).back().ts << std::endl;
-    return 0;
-
-    HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
-
-    Calibration calibration(&histogramManager);
-    start = std::chrono::steady_clock::now();
-    calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
-
-    const std::string internalEnergyPeaksFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
-//    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep.root"};
-    const std::string externalEnergyPeaksFileName{"results/proba_c_0_1_ep.root"};
-    calibration.process(internalEnergyPeaksFileName);
-//    calibration.process(internalEnergyPeaksFileName);
-    stop = std::chrono::steady_clock::now();
-    HistogramWriter histogramWriter;
-    histogramWriter.addHist(histogramManager.histEnergyTotal());
-    histogramWriter.addHists(histogramManager.histsEnergyByGamma());
-//    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
-//    histogramWriter.addHists(histogramManager.histsAmpByGamma());
-//    histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
-    const std::string rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
-    if (histogramWriter.write(rootFileName)) {
-        std::cout << "Histograms successfully written to file " << rootFileName << std::endl;
-    }
-    // TODO !
-//    HistogramPainter::paintHist(histogramManager.histEnergyTotal(), AppConstants::OUTPUT_PATH + filePath.filename().string() + ".pdf");
-    HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".pdf");
-    HistogramPainter::paintHists(histogramManager.histsAmpByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_sg" + ".pdf");
-    HistogramPainter::paintHists(histogramManager.histsAmpByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_rc" + ".pdf");
-    HistogramPainter::paintHists(histogramManager.histsEnergyByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_sg" + ".pdf");
-     HistogramPainter::paintHists(histogramManager.histsEnergyByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_rc" + ".pdf");
-
-    auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
-
-    std::ofstream ofs("counters.txt", std::ios::out | std::ios::app);
-    if (ofs.is_open()) {
-        ofs << filePath;
-        for (const auto &[key, value] : decoder.counters()) {
-            ofs << " " << value;
+        if (decoder.events().empty() || decoder.time() < std::numeric_limits<double>::epsilon() || decoder.counters().empty()) {
+            std::cout << "No valid data in file " << filePath << std::endl;
+            return 1;
         }
-        ofs << std::endl;
-        ofs.close();
+
+
+        HistogramManager histogramManager(AppConstants::MAX_GAMMA_NUMBER, AppConstants::MAX_ALPHA_NUMBER);
+
+        Calibration calibration(&histogramManager);
+        start = std::chrono::steady_clock::now();
+        calibration.setNewData(decoder.events(), decoder.channels(), decoder.time(), decoder.counters());
+
+        const std::string internalEnergyPeaksFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
+    //    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep.root"};
+        const std::string externalEnergyPeaksFileName{"results/proba_c_0_1_ep.root"};
+        calibration.process(internalEnergyPeaksFileName);
+    //    calibration.process(internalEnergyPeaksFileName);
+        stop = std::chrono::steady_clock::now();
+        HistogramWriter histogramWriter;
+        histogramWriter.addHist(histogramManager.histEnergyTotal());
+        histogramWriter.addHists(histogramManager.histsEnergyByGamma());
+    //    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
+    //    histogramWriter.addHists(histogramManager.histsAmpByGamma());
+    //    histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
+        const std::string rootFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + ".root"};
+        if (histogramWriter.write(rootFileName)) {
+            std::cout << "Histograms successfully written to file " << rootFileName << std::endl;
+        }
+        // TODO !
+    //    HistogramPainter::paintHist(histogramManager.histEnergyTotal(), AppConstants::OUTPUT_PATH + filePath.filename().string() + ".pdf");
+        HistogramPainter::paintHists(histogramManager.histsTimeByGammaAlpha(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_t" + ".pdf");
+        HistogramPainter::paintHists(histogramManager.histsAmpByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_sg" + ".pdf");
+        HistogramPainter::paintHists(histogramManager.histsAmpByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_amp_rc" + ".pdf");
+        HistogramPainter::paintHists(histogramManager.histsEnergyByGamma(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_sg" + ".pdf");
+         HistogramPainter::paintHists(histogramManager.histsEnergyByGammaRc(), AppConstants::OUTPUT_PATH + filePath.filename().string() + "_energy_rc" + ".pdf");
+
+        auto dP{std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()};
+
+        std::ofstream ofs("counters.txt", std::ios::out | std::ios::app);
+        if (ofs.is_open()) {
+            ofs << filePath;
+            for (const auto &[key, value] : decoder.counters()) {
+                ofs << " " << value;
+            }
+            ofs << std::endl;
+            ofs.close();
+        }
+
+        auto eventsNumber{0};
+        for (const auto& pair : decoder.events()) {
+            eventsNumber += pair.second.size();
+        }
+
+        std::vector<std::vector<std::string>> pData = {
+                {std::string(BOLD) + "parameter" + RESET, std::string(BOLD) + "value" + RESET, std::string(BOLD) + "dimension" + RESET},
+                {"decodeTime", std::to_string(dT), std::string(YELLOW) + "ms" + RESET},
+                {"processTime", std::to_string(dP), std::string(YELLOW) + "ms" + RESET},
+                {"eventsNumber", std::to_string(eventsNumber), std::string(YELLOW) + "" + RESET},
+                {"measTime", std::to_string(decoder.time()), std::string(YELLOW) + "s" + RESET},
+                {"gammaNumber", std::to_string(decoder.channels().g.size()), std::string(YELLOW) + "" + RESET},
+                {"alphaNumber", std::to_string(decoder.channels().a.size()), std::string(YELLOW) + "" + RESET},
+            };
+        ConsoleTable pTable(pData);
+        pTable.show();
+
     }
 
-    auto eventsNumber{0};
-    for (const auto& pair : decoder.events()) {
-        eventsNumber += pair.second.size();
-    }
-
-    std::vector<std::vector<std::string>> pData = {
-            {std::string(BOLD) + "parameter" + RESET, std::string(BOLD) + "value" + RESET, std::string(BOLD) + "dimension" + RESET},
-            {"decodeTime", std::to_string(dT), std::string(YELLOW) + "ms" + RESET},
-            {"processTime", std::to_string(dP), std::string(YELLOW) + "ms" + RESET},
-            {"eventsNumber", std::to_string(eventsNumber), std::string(YELLOW) + "" + RESET},
-            {"measTime", std::to_string(decoder.time()), std::string(YELLOW) + "s" + RESET},
-            {"gammaNumber", std::to_string(decoder.channels().g.size()), std::string(YELLOW) + "" + RESET},
-            {"alphaNumber", std::to_string(decoder.channels().a.size()), std::string(YELLOW) + "" + RESET},
-        };
-    ConsoleTable pTable(pData);
-    pTable.show();
 
 
 }
@@ -255,14 +269,14 @@ std::vector<Bucket> splitToBuckets(const std::unordered_map<std::pair<uint8_t, u
 void processBuckets() {
     const std::vector<std::pair<std::string, long long int>> daqData{
         { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
-//        { "sector2", stringToMcsFromEpochUTC("2025-06-17 10:56:08") },
-//        { "sector3", stringToMcsFromEpochUTC("2025-06-17 13:34:41") },
-//        { "sector4", stringToMcsFromEpochUTC("2025-06-18 15:33:10") },
-//        { "sector5", stringToMcsFromEpochUTC("2025-06-18 15:49:44") },
-//        { "sector6", stringToMcsFromEpochUTC("2025-06-18 16:06:24") },
-//        { "sector7", stringToMcsFromEpochUTC("2025-06-18 16:38:34") },
-//        { "sector8", stringToMcsFromEpochUTC("2025-06-18 17:03:21") },
-//        { "sector9", stringToMcsFromEpochUTC("2025-06-18 17:19:42") },
+        { "sector2", stringToMcsFromEpochUTC("2025-06-17 10:56:08") },
+        { "sector3", stringToMcsFromEpochUTC("2025-06-17 13:34:41") },
+        { "sector4", stringToMcsFromEpochUTC("2025-06-18 15:33:10") },
+        { "sector5", stringToMcsFromEpochUTC("2025-06-18 15:49:44") },
+        { "sector6", stringToMcsFromEpochUTC("2025-06-18 16:06:24") },
+        { "sector7", stringToMcsFromEpochUTC("2025-06-18 16:38:34") },
+        { "sector8", stringToMcsFromEpochUTC("2025-06-18 17:03:21") },
+        { "sector9", stringToMcsFromEpochUTC("2025-06-18 17:19:42") },
 //        { "sector10", stringToMcsFromEpochUTC("2025-06-18 19:03:37") }
     };
 
@@ -323,9 +337,11 @@ void processBuckets() {
 
 int main(int argc, char *argv[])
 {
-
-    processBuckets();
+    process();
     return 0;
+
+//    processBuckets();
+//    return 0;
 
     const std::vector<std::pair<std::string, long long int>> daqData{
         { "sector1", stringToMcsFromEpochUTC("2025-06-17 10:27:54") },
@@ -458,7 +474,7 @@ int main(int argc, char *argv[])
 //        if (e < 250'000) {
 //            continue;
 //        }
-        if (sectorChannels.g.empty() || sectorChannels.a.empty() || eF < 5'000'000) {
+        if (sectorChannels.g.empty() || sectorChannels.a.empty()) {
             std::cout << "Sector" << " " << std::to_string(sectorsDataItem.rowIdx) << "_" << std::to_string(sectorsDataItem.colIdx) << " " << "skipped"  << std::endl;
             continue;
         }
@@ -477,15 +493,15 @@ int main(int argc, char *argv[])
         const std::string internalEnergyPeaksFileName{AppConstants::OUTPUT_PATH + fileName + "_ep" + ".root"};
     //    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep.root"};
         const std::string externalEnergyPeaksFileName{"results/proba_c_0_1_ep.root"};
-        calibration.process(internalEnergyPeaksFileName);
+        calibration.processBuckets_1("external.csv");
     //    calibration.process(internalEnergyPeaksFileName);
         stop = std::chrono::steady_clock::now();
         HistogramWriter histogramWriter;
         histogramWriter.addHist(histogramManager.histEnergyTotal());
         histogramWriter.addHists(histogramManager.histsEnergyByGamma());
     //    histogramWriter.addHists(histogramManager.histsEnergyByAlpha());
-        histogramWriter.addHists(histogramManager.histsAmpByGamma());
-        histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
+//        histogramWriter.addHists(histogramManager.histsAmpByGamma());
+//        histogramWriter.addHists(histogramManager.histsAmpByGammaRc());
 
         const std::string rootFileName{AppConstants::OUTPUT_PATH + fileName + ".root"};
         if (histogramWriter.write(rootFileName)) {
