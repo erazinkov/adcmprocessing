@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
     const std::string internalEnergyPeaksFileName{AppConstants::OUTPUT_PATH + filePath.filename().string() + "_ep" + ".root"};
 //    const std::string externalEnergyPeaksFileName{"results/proba_c_7_1_ep.root"};
-    const std::string externalEnergyPeaksFileName{"results/proba_c_0_1_ep.root"};
+    const std::string externalEnergyPeaksFileName{"results/pulp_rot_sop1_3_ep.root"};
     calibration.process(internalEnergyPeaksFileName);
 //    calibration.process(internalEnergyPeaksFileName);
     stop = std::chrono::steady_clock::now();

@@ -7,7 +7,7 @@ HistogramManager::HistogramManager(const int &gammaNumber, const int &alphaNumbe
     histTimeTotal_->Sumw2();
     histTimeTotal_->SetDirectory(nullptr);
 
-    histEnergyTotal_ = std::make_unique<TH1D>("hist_energy_total", "hist_energy_total", BINS_ENERGY, XLOW_ENERGY, XUP_ENERGY);
+    histEnergyTotal_ = std::make_unique<TH1D>("hist", "hist_energy_total", BINS_ENERGY, XLOW_ENERGY, XUP_ENERGY);
     histEnergyTotal_->Sumw2();
     histEnergyTotal_->SetDirectory(nullptr);
 

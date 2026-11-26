@@ -22,8 +22,8 @@ EnergyPeakFinder::EnergyPeakFinder() : calib_{1.0}, offset_{0.0}
     fCalib_->SetParameter(2, 0.0);
 
     findPeakPosFunctions_ = {
-        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.3); }},
-        {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.2); }},
+        {EnergyPeak::Id::FE847, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum847(histRc, 1.2); }},
+        {EnergyPeak::Id::FE1238, [&](TH1 *, TH1 *histRc) { return findPeakPosFerrum1238(histRc, 1.5); }},
         {EnergyPeak::Id::HYDROGEN, [&](TH1 *, TH1 *histRc) { return findPeakPosHydrogen(histRc, 1.5); }},
         {EnergyPeak::Id::SILICON, [&](TH1 *hist, TH1 *) { return findPeakPosSilicon(hist, 1.35); }},
         {EnergyPeak::Id::CARBON, [&](TH1 *hist, TH1 *) { return findPeakPosCarbon(hist, 1.35); }},
@@ -46,10 +46,10 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
     std::vector<EnergyPeak> peaks{
                 EnergyPeak{EnergyPeak::Id::FE847, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE1238, 0.0},
-                EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
+//                EnergyPeak{EnergyPeak::Id::HYDROGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::CARBON, 0.0},
 //                EnergyPeak{EnergyPeak::Id::SILICON, 0.0},
-                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
+//                EnergyPeak{EnergyPeak::Id::OXYGENADD, 0.0},
                 EnergyPeak{EnergyPeak::Id::OXYGEN, 0.0},
                 EnergyPeak{EnergyPeak::Id::FE7631, 0.0},
     };
@@ -88,9 +88,9 @@ void EnergyPeakFinder::process(TH1D *hist, TH1D *histRc)
         fitGraph();
     }
 
-    for (const auto &p : peaks) {
-        std::cout << p.channel() << " " << p.energy() << std::endl;
-    }
+//    for (const auto &p : peaks) {
+//        std::cout << p.channel() << " " << p.energy() << std::endl;
+//    }
 
 
     std::vector<EnergyPeak::Id> excludePeaks{
