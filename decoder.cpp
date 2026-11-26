@@ -20,11 +20,67 @@ Decoder::Decoder()
 {
 }
 
+void Decoder::process(const std::string &filePath)
+{
+    ifs_.open(filePath, std::ios::in | std::ios::binary);
+    if (!ifs_.is_open()) {
+        std::clog << "Can't open file" << std::endl;
+        return;
+    }
+
+    ifs_.seekg(0, std::ios::end);
+    u_int64_t size{static_cast<u_int64_t>(ifs_.tellg())};
+    ifs_.seekg(0);
+
+    time_ = 0.0;
+
+    stor_packet_hdr_t hdr;
+    stor_ev_hdr_t ev;
+    adcm_cmap_t cmap;
+    adcm_counters_t counters;
+    u_int64_t currentPosition{0};
+
+    stor_puls_t *g{new stor_puls_t()};
+    stor_puls_t *a{new stor_puls_t()};
+
+    while (ifs_) {
+        ifs_ >> hdr;
+        if (hdr.id == STOR_ID_CMAP && hdr.size > sizeof(stor_packet_hdr_t)) {
+            currentPosition = static_cast<u_int64_t>(ifs_.tellg());
+            ifs_ >> cmap;
+            ProgressBar<u_int64_t>::show(currentPosition, size);
+            continue;
+        }
+        if (hdr.id == STOR_ID_EVNT && hdr.size > sizeof(stor_packet_hdr_t)) {
+            ifs_ >> ev;
+            hdr.size -= sizeof(stor_packet_hdr_t);
+            hdr.size -= sizeof(stor_ev_hdr_t);
+            ifs_.ignore(hdr.size);
+            continue;
+        }
+        if (hdr.id == STOR_ID_CNTR && hdr.size > sizeof(stor_packet_hdr_t)) {
+            ifs_ >> counters;
+            if (!counters.n) {
+                continue;
+            }
+            time_ += counters.time;
+//            hdr.size -= sizeof(stor_packet_hdr_t);
+//            ifs_.ignore(hdr.size);
+            continue;
+        }
+        ifs_.seekg(1 - static_cast<long long>(sizeof(stor_packet_hdr_t)), std::ios_base::cur);
+    }
+    delete g;
+    g = nullptr;
+    delete a;
+    a = nullptr;
+    ifs_.close();
+}
+
 void Decoder::process(const std::string &filePath, const long long &time)
 {
     ifs_.open(filePath, std::ios::in | std::ios::binary);
-    if (!ifs_.is_open())
-    {
+    if (!ifs_.is_open()) {
         std::clog << "Can't open file" << std::endl;
         return;
     }

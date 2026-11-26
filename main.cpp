@@ -1,4 +1,4 @@
-﻿//#include <QCoreApplication>
+//#include <QCoreApplication>
 
 #include <iostream>
 #include <limits>
@@ -337,8 +337,8 @@ void processBuckets() {
 
 int main(int argc, char *argv[])
 {
-    process();
-    return 0;
+//    process();
+//    return 0;
 
 //    processBuckets();
 //    return 0;
@@ -355,6 +355,22 @@ int main(int argc, char *argv[])
         { "sector9", stringToMcsFromEpochUTC("2025-06-18 17:19:42") },
 //        { "sector10", stringToMcsFromEpochUTC("2025-06-18 19:03:37") }
     };
+
+
+
+    std::vector<long long int> daqDataEndTimeMcsFromEpochUTC;
+
+    for (const auto &daqDataItem : daqData) {
+        Decoder decoder;
+        decoder.process(daqDataItem.first);
+        daqDataEndTimeMcsFromEpochUTC.push_back(daqDataItem.second + decoder.time() * 1'000'000);
+    }
+
+    for (size_t i{0}; i < daqData.size(); i++) {
+        std::cout << daqData.at(i).second << " " << daqDataEndTimeMcsFromEpochUTC.at(i) << std::endl;
+    }
+
+    return 0;
 
     const std::string processingFile{
         "processing_data.csv"
