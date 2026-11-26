@@ -11,6 +11,8 @@
 
 #include "consoletable.h"
 
+#include <regex>
+
 Calibration::Calibration(HistogramManager *histogramManager)
     : histogramManager_{histogramManager}
 {
@@ -32,9 +34,16 @@ void Calibration::process(const std::string &internalEnergyPeaksFileName, const 
     for (size_t ig{0}; ig < igMax; ++ig) {
         for (size_t ia{0}; ia <  iaMax; ++ia) {
             std::pair<uint8_t, uint8_t> p{ig, ia};
-            timeCorrections_[p] = TimePeaksFinder::calculatePeakPos(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia).get());
+//            timeCorrections_[p] = TimePeaksFinder::calculatePeakPos(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia).get());
+            if (ig == 7 && ia == 4) {
+                std::string fileName{internalEnergyPeaksFileName};
+                std::regex_replace(fileName, std::regex("_ep\\.root$"), "");
+                TimePeaksFinder::saveParameters(histogramManager_->histsTimeByGammaAlpha().at(ig).at(ia).get(), fileName);
+            }
         }
     }
+
+    return;
 
     fillHistsTimeByGammaAlpha(histogramManager_->histsTimeCorrectedByGammaAlpha(), true);
 
