@@ -358,6 +358,8 @@ int main(int argc, char *argv[])
 
 
 
+
+
     std::vector<long long int> daqDataEndTimeMcsFromEpochUTC;
 
     for (const auto &daqDataItem : daqData) {
@@ -369,8 +371,6 @@ int main(int argc, char *argv[])
     for (size_t i{0}; i < daqData.size(); i++) {
         std::cout << daqData.at(i).second << " " << daqDataEndTimeMcsFromEpochUTC.at(i) << std::endl;
     }
-
-    return 0;
 
     const std::string processingFile{
         "processing_data.csv"
@@ -388,15 +388,17 @@ int main(int argc, char *argv[])
         dec_ch_t sectorChannels;
         std::cout << "Sector " << std::to_string(sectorsDataItem.rowIdx) << "_" << std::to_string(sectorsDataItem.colIdx) << std::endl;
         auto start = std::chrono::steady_clock::now();
+        auto daqDataIdx{0};
         for (const auto &daqDataItem : daqData) {
             std::unordered_map<std::pair<uint8_t, uint8_t>,
                                    std::vector<dec_ev_t>, PairHash> sectorEvents;
             std::filesystem::path filePath = daqDataItem.first;
             auto time = daqDataItem.second;
-
+            auto timeEnd = daqDataEndTimeMcsFromEpochUTC.at(daqDataIdx);
+            daqDataIdx++;
             std::cout << "Daq file: " << filePath << std::endl;
             std::cout << "Daq start time/Sector min data time/Sector max data time " << time << "/" << sectorsDataItem.ts.front()<< "/" << sectorsDataItem.ts.back() << " " << "ms"<< std::endl;
-            if (time > sectorsDataItem.ts.back()) {
+            if (time > sectorsDataItem.ts.back() || timeEnd < sectorsDataItem.ts.front()) {
                 std::cout << "Skip daq file " << daqDataItem.first << ".\n"
                           << "Daq start time: " <<  time << "\n"
                           << "Sector data time: " << sectorsDataItem.ts.back() << std::endl;
