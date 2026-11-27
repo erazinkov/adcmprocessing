@@ -16,7 +16,7 @@ ResolutionProcessing::ResolutionProcessing()
 
 }
 
-void ResolutionProcessing::processingEnergy(const std::string &filePath, const std::vector<TH1D *> &hists, const size_t &gammaNumber)
+void ResolutionProcessing::processingEnergy(const std::string &filePath, const std::vector<std::unique_ptr<TH1D>> &hists, const size_t &gammaNumber)
 {
     energyResolutionsByGamma_.clear();
     TH1D *hS{nullptr};
@@ -29,7 +29,7 @@ void ResolutionProcessing::processingEnergy(const std::string &filePath, const s
             hS = static_cast<TH1D *>(hists.at(i)->Clone("hS"));
             hS->SetTitle(hS->GetName());
         } else {
-            hS->Add(hists.at(i));
+            hS->Add(hists.at(i).get());
         }
         TH1D *h = static_cast<TH1D *>(hists.at(i)->Clone());
         energyResolutionsByGamma_.emplace_back(energyResolution(h));
@@ -57,7 +57,7 @@ void ResolutionProcessing::processingEnergy(const std::string &filePath, const s
     delete c;
 }
 
-void ResolutionProcessing::processingTime(const std::string &filePath, const std::vector<TH1D *> &hists, const size_t &gammaNumber)
+void ResolutionProcessing::processingTime(const std::string &filePath, const std::vector<std::unique_ptr<TH1D>> &hists, const size_t &gammaNumber)
 {
 
     timeResolutionsByGamma_.clear();
@@ -71,7 +71,7 @@ void ResolutionProcessing::processingTime(const std::string &filePath, const std
             hS = static_cast<TH1D *>(hists.at(i)->Clone("hS"));
             hS->SetTitle(hS->GetName());
         } else {
-            hS->Add(hists.at(i));
+            hS->Add(hists.at(i).get());
         }
         TH1D *h = static_cast<TH1D *>(hists.at(i)->Clone());
         timeResolutionsByGamma_.emplace_back(timeResolution(h));
@@ -179,91 +179,14 @@ std::pair<double, double> ResolutionProcessing::energyResolution(TH1 *hist)
     return std::pair<double, double>{100.0 * 2.35 * f.GetParameter(5) / 4438.0, 100.0 * 2.35 * f.GetParError(5) / 4438.0};
 }
 
-//std::pair<double, double> ResolutionProcessing::timeResolution(TH1 *hist)
-//{
-//    gErrorIgnoreLevel = 3'000;
-//    gStyle->SetOptFit(1111);
-//    auto binMax{hist->GetMaximumBin()};
-//    auto xMax{hist->GetBinCenter(hist->GetBin(binMax))};
-//    auto rcAmp{hist->GetBinContent(hist->GetXaxis()->FindBin(xMax - 25.0))};
-//    auto obPeakAmp{hist->GetBinContent(binMax) - rcAmp};
-
-//    auto fff = [](double *x, double *par){
-//        double arg{0};
-//        if (par[2] != 0.0)
-//        {
-//            arg = ( x[0] - par[1] ) / par[2];
-//        }
-//        double fitval{par[0] * TMath::Exp(-0.5 * arg * arg) + par[3] + par[4] * x[0]};
-//        return fitval;
-//    };
-
-//    TF1 f{"f", fff, xMax - 50.0, xMax + 50.0, 5};
-
-//    f.SetParameter(0, obPeakAmp);
-//    f.SetParameter(1, xMax);
-//    f.SetParameter(2, 0.5 * ( 1.5 + 3.0 ));
-//    f.SetParameter(3, rcAmp);
-//    f.FixParameter(4, 0.0);
-
-//    hist->Fit(&f, "RQ0");
-
-//    TF1 *fOb{new TF1("fOb", fff, xMax - 50.0, xMax + 50.0, 5)};
-//    fOb->SetParameters(f.GetParameters());
-//    hist->GetListOfFunctions()->Add(fOb);
-
-//    gErrorIgnoreLevel = 0;
-//    return std::pair<double, double>{2.35 * f.GetParameter(2), 2.35 * f.GetParError(2)};
-//}
 std::pair<double, double> ResolutionProcessing::timeResolution(TH1 *hist)
 {
+    gErrorIgnoreLevel = 3'000;
     gStyle->SetOptFit(1111);
     auto binMax{hist->GetMaximumBin()};
     auto xMax{hist->GetBinCenter(hist->GetBin(binMax))};
-    auto rcAmp{hist->GetBinContent(hist->GetXaxis()->FindBin(xMax - 25.0))};
+    auto rcAmp{hist->GetBinContent(hist->GetXaxis()->FindBin(xMax - 50.0))};
     auto obPeakAmp{hist->GetBinContent(binMax) - rcAmp};
-    auto snPeakAmp{0.5 * obPeakAmp};
-
-    std::cout << xMax << " " << obPeakAmp << std::endl;
-
-    auto ff = [] (double *x, double *par) {
-       double arg_1{0.0}, arg_2{0.0}, arg_3{0.0};
-       if (par[2] != 0.0 && par[5] != 0.0)
-       {
-           arg_1 = ( x[0] - par[1] ) / par[2];
-           arg_2 = ( x[0] - ( par[1] + par[4] ) ) / par[5];
-           arg_3 = x[0];
-       }
-
-       double fitval{
-           par[0] * TMath::Exp( -0.5 * arg_1 * arg_1 ) +
-           par[3] * TMath::Exp( -0.5 * arg_2 * arg_2 ) +
-           par[6] + par[7] * arg_3
-       };
-
-       return fitval;
-    };
-
-    TF1 f("f", ff, xMax - 50.0, xMax + 50.0, 8);
-
-    f.SetParameter(0, obPeakAmp);
-    f.SetParameter(1, xMax);
-    f.SetParameter(2, 0.5 * ( 1.5 + 3.0 ));
-    f.SetParameter(3, 0.05 * obPeakAmp);
-    // 4 ?
-    f.SetParameter(5, 2.5);
-    f.SetParameter(6, rcAmp);
-    f.FixParameter(7, 0.0);
-
-//    f.SetParLimits(1, 0.9 * xMax, 1.1 * xMax);
-    f.SetParLimits(2, 1.5, 3.0);
-    f.SetParLimits(3, 0.0, snPeakAmp);
-//    f.SetParLimits(4, 5.0, 20.0);
-    f.SetParLimits(5, 2.0, 7.0);
-
-// hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 40.0, f->GetParameter(1) + 25.0);
-
-    hist->Fit(&f, "RQ");
 
     auto fff = [](double *x, double *par){
         double arg{0};
@@ -275,23 +198,100 @@ std::pair<double, double> ResolutionProcessing::timeResolution(TH1 *hist)
         return fitval;
     };
 
+    TF1 f{"f", fff, xMax - 25.0, xMax + 25.0, 5};
+
+    f.SetParameter(0, obPeakAmp);
+    f.SetParameter(1, xMax);
+    f.SetParameter(2, 0.5 * ( 1.5 + 3.0 ));
+    f.SetParameter(3, rcAmp);
+    f.FixParameter(4, 0.0);
+
+    hist->Fit(&f, "RQ0");
+
     TF1 *fOb{new TF1("fOb", fff, xMax - 50.0, xMax + 50.0, 5)};
-    fOb->SetParameters(f.GetParameter(0),
-                       f.GetParameter(1),
-                       f.GetParameter(2),
-                       f.GetParameter(6),
-                       f.GetParameter(7));
-    fOb->SetLineColor(kGreen);
-    TF1 *fSn{new TF1("fSn", fff, xMax - 50.0, xMax + 50.0, 5)};
-    fSn->SetParameters(f.GetParameter(3),
-                       f.GetParameter(1) + f.GetParameter(4),
-                       f.GetParameter(5),
-                       f.GetParameter(6),
-                       f.GetParameter(7));
-    fSn->SetLineColor(kBlue);
-
+    fOb->SetParameters(f.GetParameters());
     hist->GetListOfFunctions()->Add(fOb);
-    hist->GetListOfFunctions()->Add(fSn);
 
+    gErrorIgnoreLevel = 0;
     return std::pair<double, double>{2.35 * f.GetParameter(2), 2.35 * f.GetParError(2)};
 }
+//std::pair<double, double> ResolutionProcessing::timeResolution(TH1 *hist)
+//{
+//    gStyle->SetOptFit(1111);
+//    auto binMax{hist->GetMaximumBin()};
+//    auto xMax{hist->GetBinCenter(hist->GetBin(binMax))};
+//    auto rcAmp{hist->GetBinContent(hist->GetXaxis()->FindBin(xMax - 25.0))};
+//    auto obPeakAmp{hist->GetBinContent(binMax) - rcAmp};
+//    auto snPeakAmp{0.25 * obPeakAmp};
+
+//    std::cout << xMax << " " << obPeakAmp << std::endl;
+
+//    auto ff = [] (double *x, double *par) {
+//       double arg_1{0.0}, arg_2{0.0}, arg_3{0.0};
+//       if (par[2] != 0.0 && par[5] != 0.0)
+//       {
+//           arg_1 = ( x[0] - par[1] ) / par[2];
+//           arg_2 = ( x[0] - ( par[1] + par[4] ) ) / par[5];
+//           arg_3 = x[0];
+//       }
+
+//       double fitval{
+//           par[0] * TMath::Exp( -0.5 * arg_1 * arg_1 ) +
+//           par[3] * TMath::Exp( -0.5 * arg_2 * arg_2 ) +
+//           par[6] + par[7] * arg_3
+//       };
+
+//       return fitval;
+//    };
+
+//    TF1 f("f", ff, xMax - 50.0, xMax + 50.0, 8);
+
+//    f.SetParameter(0, obPeakAmp);
+//    f.SetParameter(1, xMax);
+//    f.SetParameter(2, 0.5 * ( 1.5 + 3.0 ));
+//    f.SetParameter(3, 0.05 * obPeakAmp);
+//    // 4 ?
+//    f.SetParameter(5, 2.5);
+//    f.SetParameter(6, rcAmp);
+//    f.FixParameter(7, 0.0);
+
+////    f.SetParLimits(1, 0.9 * xMax, 1.1 * xMax);
+//    f.SetParLimits(2, 1.5, 3.0);
+//    f.SetParLimits(3, 0.0, snPeakAmp);
+////    f.SetParLimits(4, 5.0, 20.0);
+//    f.SetParLimits(5, 2.0, 7.0);
+
+//// hist->GetXaxis()->SetRangeUser(f->GetParameter(1) - 40.0, f->GetParameter(1) + 25.0);
+
+//    hist->Fit(&f, "RQ");
+
+//    auto fff = [](double *x, double *par){
+//        double arg{0};
+//        if (par[2] != 0.0)
+//        {
+//            arg = ( x[0] - par[1] ) / par[2];
+//        }
+//        double fitval{par[0] * TMath::Exp(-0.5 * arg * arg) + par[3] + par[4] * x[0]};
+//        return fitval;
+//    };
+
+//    TF1 *fOb{new TF1("fOb", fff, xMax - 50.0, xMax + 50.0, 5)};
+//    fOb->SetParameters(f.GetParameter(0),
+//                       f.GetParameter(1),
+//                       f.GetParameter(2),
+//                       f.GetParameter(6),
+//                       f.GetParameter(7));
+//    fOb->SetLineColor(kGreen);
+//    TF1 *fSn{new TF1("fSn", fff, xMax - 50.0, xMax + 50.0, 5)};
+//    fSn->SetParameters(f.GetParameter(3),
+//                       f.GetParameter(1) + f.GetParameter(4),
+//                       f.GetParameter(5),
+//                       f.GetParameter(6),
+//                       f.GetParameter(7));
+//    fSn->SetLineColor(kBlue);
+
+//    hist->GetListOfFunctions()->Add(fOb);
+//    hist->GetListOfFunctions()->Add(fSn);
+
+//    return std::pair<double, double>{2.35 * f.GetParameter(2), 2.35 * f.GetParError(2)};
+//}

@@ -8,8 +8,8 @@ class ResolutionProcessing
 {
 public:
     ResolutionProcessing();
-    void processingEnergy(const std::string &filePath, const std::vector<TH1D *> &hists, const size_t &gammaNumber);
-    void processingTime(const std::string &filePath, const std::vector<TH1D *> &hists, const size_t &gammaNumber);
+    void processingEnergy(const std::string &filePath, const std::vector<std::unique_ptr<TH1D>> &hists, const size_t &gammaNumber);
+    void processingTime(const std::string &filePath, const std::vector<std::unique_ptr<TH1D>> &hists, const size_t &gammaNumber);
     void exportToCSV(const std::string &filePath);
 
 private:
